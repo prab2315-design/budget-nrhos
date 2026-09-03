@@ -18,7 +18,6 @@ import {
   monthYearKey,
   parseThaiMonth,
   formatCurrencyFull,
-  truncateText,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -580,18 +579,18 @@ export default function Dashboard() {
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-black/10">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[820px] table-fixed text-left text-sm">
               <thead>
                 <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
                   {([
-                    { key: "ลำดับ", label: "ลำดับ" },
-                    { key: "เดือน", label: "เดือน" },
-                    { key: "รหัสบัญชี", label: "รหัสบัญชี" },
-                    { key: "หมวด", label: "หมวด" },
-                    { key: "รายการบัญชี", label: "รายการบัญชี" },
-                    { key: "ยอดจริง", label: "ยอดจริง" },
-                    { key: "ประเภท", label: "ประเภท" },
-                  ]).map(({ key, label }) => {
+                    { key: "ลำดับ", label: "ลำดับ", width: "w-[6%]" },
+                    { key: "เดือน", label: "เดือน", width: "w-[13%]" },
+                    { key: "รหัสบัญชี", label: "รหัสบัญชี", width: "w-[11%]" },
+                    { key: "หมวด", label: "หมวด", width: "w-[20%]" },
+                    { key: "รายการบัญชี", label: "รายการบัญชี", width: "w-[26%]" },
+                    { key: "ยอดจริง", label: "ยอดจริง", width: "w-[14%]" },
+                    { key: "ประเภท", label: "ประเภท", width: "w-[10%]" },
+                  ]).map(({ key, label, width }) => {
                     const isActive = sortConfig?.key === key;
                     const dir = isActive ? sortConfig!.dir : null;
                     return (
@@ -608,7 +607,8 @@ export default function Dashboard() {
                           })
                         }
                         className={cn(
-                          "group whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold select-none transition-colors",
+                          "group overflow-hidden whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold select-none transition-colors",
+                          width,
                           isActive ? "text-primary" : "text-muted-foreground cursor-pointer hover:text-foreground",
                         )}
                       >
@@ -644,31 +644,25 @@ export default function Dashboard() {
                     key={`${safePage}-${i}`}
                     className="border-b border-black/5 transition-colors hover:bg-black/5"
                   >
-                    <td className="whitespace-nowrap px-3 py-2 text-xs">
+                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
                       {r.ลำดับ}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs">
+                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
                       {r.เดือน}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs">
+                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
                       {r.รหัสบัญชี}
                     </td>
-                    <td
-                      className="max-w-[160px] truncate px-3 py-2 text-xs"
-                      title={r.หมวด}
-                    >
-                      {truncateText(r.หมวด, 20)}
+                    <td className="break-words px-3 py-2 text-xs">
+                      {r.หมวด}
                     </td>
-                    <td
-                      className="max-w-[220px] truncate px-3 py-2 text-xs"
-                      title={r.รายการบัญชี}
-                    >
-                      {truncateText(r.รายการบัญชี, 28)}
+                    <td className="break-words px-3 py-2 text-xs">
+                      {r.รายการบัญชี}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right text-xs font-medium">
+                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-right text-xs font-medium">
                       {formatCurrencyFull(r.ยอดจริง)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs">
+                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
                       <span
                         className={cn(
                           "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
