@@ -91,8 +91,10 @@ export default function Dashboard() {
     endYear: 2025,
   });
 
-  // Table search
+  // Table search & pagination
   const [tableSearch, setTableSearch] = useState("");
+  const [tablePage, setTablePage] = useState(0);
+  const PAGE_SIZE = 20;
 
   /* ─── data fetching ─────────────────────────────── */
 
@@ -272,6 +274,18 @@ export default function Dashboard() {
       Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
     );
   }, [filteredData, tableSearch]);
+
+  const tableTotalPages = Math.max(1, Math.ceil(tableData.length / PAGE_SIZE));
+  const safePage = Math.min(tablePage, tableTotalPages - 1);
+  const pagedData = useMemo(
+    () => tableData.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE),
+    [tableData, safePage],
+  );
+
+  // Reset to first page when data or search changes
+  useEffect(() => {
+    setTablePage(0);
+  }, [tableSearch, filteredData]);
 
   /* ─── exports ───────────────────────────────────── */
 
@@ -562,7 +576,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {tableData.length === 0 && (
+                {pagedData.length === 0 && (
                   <tr>
                     <td
                       colSpan={7}
@@ -572,9 +586,9 @@ export default function Dashboard() {
                     </td>
                   </tr>
                 )}
-                {tableData.map((r, i) => (
+                {pagedData.map((r, i) => (
                   <tr
-                    key={i}
+                    key={`${safePage}-${i}`}
                     className="border-b border-white/5 transition-colors hover:bg-white/5"
                   >
                     <td className="whitespace-nowrap px-3 py-2 text-xs">
@@ -618,6 +632,66 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {tableData.length > PAGE_SIZE && (
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                แสดง {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, tableData.length)} จาก {tableData.length} รายการ
+              </p>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setTablePage((p) => Math.max(0, p - 1))}
+                  disabled={safePage === 0}
+                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-30"
+                >
+                  ก่อนหน้า
+                </button>
+                {Array.from({ length: tableTotalPages }, (_, i) => i)
+                  .filter((i) => {
+                    if (tableTotalPages <= 7) return true;
+                    if (i === 0 || i === tableTotalPages - 1) return true;
+                    if (Math.abs(i - safePage) <= 1) return true;
+                    return false;
+                  })
+                  .reduce<(number | "ellipsis")[]>((acc, i, idx, arr) => {
+                    if (idx > 0 && typeof arr[idx - 1] === "number" && i - (arr[idx - 1] as number) > 1) {
+                      acc.push("ellipsis");
+                    }
+                    acc.push(i);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "ellipsis" ? (
+                      <span key={`e${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setTablePage(item)}
+                        className={cn(
+                          "min-w-[28px] rounded-lg px-2 py-1 text-xs font-medium transition-colors",
+                          item === safePage
+                            ? "bg-primary/20 text-primary"
+                            : "text-muted-foreground hover:bg-white/5",
+                        )}
+                      >
+                        {item + 1}
+                      </button>
+                    ),
+                  )}
+                <button
+                  type="button"
+                  onClick={() => setTablePage((p) => Math.min(tableTotalPages - 1, p + 1))}
+                  disabled={safePage >= tableTotalPages - 1}
+                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-30"
+                >
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Footer ─────────────────────── */}
