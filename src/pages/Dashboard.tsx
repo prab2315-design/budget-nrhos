@@ -58,7 +58,6 @@ function isInDateRange(
 /* ─── filter column definitions ────────────────────────────── */
 
 const FILTER_COLS = [
-  { key: "ลำดับ", label: "ลำดับ" },
   { key: "เดือน", label: "เดือน" },
   { key: "รหัสบัญชี", label: "รหัสบัญชี" },
   { key: "หมวด", label: "หมวด" },
@@ -75,7 +74,6 @@ export default function Dashboard() {
 
   // Filter state – each is multi-select
   const [filters, setFilters] = useState<Record<string, string[]>>({
-    ลำดับ: [],
     เดือน: [],
     รหัสบัญชี: [],
     หมวด: [],
@@ -311,7 +309,6 @@ export default function Dashboard() {
   const exportCSV = useCallback(() => {
     if (!filteredData.length) return;
     const headers = [
-      "ลำดับ",
       "เดือน",
       "รหัสบัญชี",
       "หมวด",
@@ -320,7 +317,6 @@ export default function Dashboard() {
       "ประเภท",
     ];
     const rows = filteredData.map((r) => [
-      r.ลำดับ,
       r.เดือน,
       r.รหัสบัญชี,
       r.หมวด,
@@ -367,10 +363,9 @@ export default function Dashboard() {
     );
 
     const head = [
-      ["ลำดับ", "เดือน", "รหัสบัญชี", "หมวด", "รายการบัญชี", "ยอดจริง", "ประเภท"],
+      ["เดือน", "รหัสบัญชี", "หมวด", "รายการบัญชี", "ยอดจริง", "ประเภท"],
     ];
     const body = filteredData.map((r) => [
-      r.ลำดับ,
       r.เดือน,
       r.รหัสบัญชี,
       r.หมวด,
@@ -397,13 +392,12 @@ export default function Dashboard() {
       },
       alternateRowStyles: { fillColor: [240, 245, 255] },
       columnStyles: {
-        0: { cellWidth: 12 },
-        1: { cellWidth: 38 },
-        2: { cellWidth: 28 },
-        3: { cellWidth: 38 },
-        4: { cellWidth: 80, halign: "left" },
-        5: { cellWidth: 38, halign: "right" },
-        6: { cellWidth: 22 },
+        0: { cellWidth: 44 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 44 },
+        3: { cellWidth: 85, halign: "left" },
+        4: { cellWidth: 44, halign: "right" },
+        5: { cellWidth: 24 },
       },
       margin: { left: 12, right: 12 },
       didDrawPage: (data) => {
@@ -585,11 +579,10 @@ export default function Dashboard() {
               <thead>
                 <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
                   {([
-                    { key: "ลำดับ", label: "ลำดับ", width: "w-[6%]" },
-                    { key: "เดือน", label: "เดือน", width: "w-[13%]" },
+                    { key: "เดือน", label: "เดือน", width: "w-[15%]" },
                     { key: "รหัสบัญชี", label: "รหัสบัญชี", width: "w-[11%]" },
-                    { key: "หมวด", label: "หมวด", width: "w-[20%]" },
-                    { key: "รายการบัญชี", label: "รายการบัญชี", width: "w-[26%]" },
+                    { key: "หมวด", label: "หมวด", width: "w-[22%]" },
+                    { key: "รายการบัญชี", label: "รายการบัญชี", width: "w-[28%]" },
                     { key: "ยอดจริง", label: "ยอดจริง", width: "w-[14%]" },
                     { key: "ประเภท", label: "ประเภท", width: "w-[10%]" },
                   ]).map(({ key, label, width }) => {
@@ -634,7 +627,7 @@ export default function Dashboard() {
                 {pagedData.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="px-3 py-8 text-center text-sm text-muted-foreground"
                     >
                       ไม่พบข้อมูลที่ตรงกับตัวกรอง
@@ -646,9 +639,6 @@ export default function Dashboard() {
                     key={`${safePage}-${i}`}
                     className="border-b border-black/5 transition-colors hover:bg-black/5"
                   >
-                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
-                      {r.ลำดับ}
-                    </td>
                     <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
                       {r.เดือน}
                     </td>
