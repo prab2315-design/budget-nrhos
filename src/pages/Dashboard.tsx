@@ -356,7 +356,7 @@ export default function Dashboard() {
     // Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง", 34, 17);
+    doc.text("แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569", 34, 17);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(
@@ -448,7 +448,7 @@ export default function Dashboard() {
             />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-foreground">
-                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
+                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
               </h1>
               <p className="text-xs text-muted-foreground">
                 แดชบอร์ดวิเคราะห์งบประมาณ ณ ปัจจุบัน
@@ -749,7 +749,7 @@ export default function Dashboard() {
 
         {/* ── Footer ─────────────────────── */}
         <div className="pb-4 text-center text-xs text-muted-foreground/60">
-          อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
+          อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
         </div>
       </div>
     </main>
