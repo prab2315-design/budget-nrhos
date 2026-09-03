@@ -234,7 +234,7 @@ export default function Dashboard() {
       .map(([key, v]) => {
         const [y, m] = key.split("-").map(Number);
         return {
-          month: `${getThaiMonthShort(m)} ${toBuddhistYear(y)}`,
+          month: `${getThaiMonthShort(m)} ${String(toBuddhistYear(y)).slice(-2)}`,
           แผนรายรับ: Math.round(totalPlanInc / nMonths),
           แผนรายจ่าย: Math.round(totalPlanExp / nMonths),
           รายรับจริง: v.inc,
@@ -259,7 +259,7 @@ export default function Dashboard() {
       .map(([key, v]) => {
         const [y, m] = key.split("-").map(Number);
         return {
-          name: `${getThaiMonthShort(m)} ${toBuddhistYear(y)}`,
+          name: `${getThaiMonthShort(m)} ${String(toBuddhistYear(y)).slice(-2)}`,
           รายรับ: v.inc,
           รายจ่าย: v.exp,
         };
