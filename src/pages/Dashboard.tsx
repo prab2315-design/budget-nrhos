@@ -482,7 +482,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── Filters ────────────────────── */}
-        <div className="glass-card p-5">
+        <div className="glass-card relative z-10 p-5">
           <div className="mb-3 flex items-center gap-2">
             <Search className="size-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">กรองข้อมูล</h2>
