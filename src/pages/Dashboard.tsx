@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   RefreshCw,
-  Wifi,
   FileDown,
   Search,
-  TrendingUp,
-  TrendingDown,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -91,9 +91,10 @@ export default function Dashboard() {
     endYear: 2025,
   });
 
-  // Table search & pagination
+  // Table search, sorting & pagination
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(0);
+  const [sortConfig, setSortConfig] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 20;
 
   /* ─── data fetching ─────────────────────────────── */
@@ -268,12 +269,27 @@ export default function Dashboard() {
   /* ─── table data ────────────────────────────────── */
 
   const tableData = useMemo(() => {
-    if (!tableSearch.trim()) return filteredData;
-    const q = tableSearch.toLowerCase();
-    return filteredData.filter((r) =>
-      Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [filteredData, tableSearch]);
+    let rows = tableSearch.trim()
+      ? filteredData.filter((r) => {
+          const q = tableSearch.toLowerCase();
+          return Object.values(r).some((v) => String(v).toLowerCase().includes(q));
+        })
+      : [...filteredData];
+
+    if (sortConfig) {
+      const { key, dir } = sortConfig;
+      const mult = dir === "asc" ? 1 : -1;
+      rows.sort((a, b) => {
+        const av = (a as unknown as Record<string, unknown>)[key] ?? "";
+        const bv = (b as unknown as Record<string, unknown>)[key] ?? "";
+        if (key === "ยอดจริง") {
+          return ((av as number) - (bv as number)) * mult;
+        }
+        return String(av).localeCompare(String(bv), "th") * mult;
+      });
+    }
+    return rows;
+  }, [filteredData, tableSearch, sortConfig]);
 
   const tableTotalPages = Math.max(1, Math.ceil(tableData.length / PAGE_SIZE));
   const safePage = Math.min(tablePage, tableTotalPages - 1);
@@ -557,22 +573,49 @@ export default function Dashboard() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
-                  {[
-                    "ลำดับ",
-                    "เดือน",
-                    "รหัสบัญชี",
-                    "หมวด",
-                    "รายการบัญชี",
-                    "ยอดจริง",
-                    "ประเภท",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="whitespace-nowrap px-3 py-2.5 text-xs font-semibold text-muted-foreground"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  {([
+                    { key: "ลำดับ", label: "ลำดับ" },
+                    { key: "เดือน", label: "เดือน" },
+                    { key: "รหัสบัญชี", label: "รหัสบัญชี" },
+                    { key: "หมวด", label: "หมวด" },
+                    { key: "รายการบัญชี", label: "รายการบัญชี" },
+                    { key: "ยอดจริง", label: "ยอดจริง" },
+                    { key: "ประเภท", label: "ประเภท" },
+                  ]).map(({ key, label }) => {
+                    const isActive = sortConfig?.key === key;
+                    const dir = isActive ? sortConfig!.dir : null;
+                    return (
+                      <th
+                        key={key}
+                        onClick={() =>
+                          setSortConfig((prev) => {
+                            if (prev?.key === key) {
+                              return prev.dir === "asc"
+                                ? { key, dir: "desc" }
+                                : null;
+                            }
+                            return { key, dir: "asc" };
+                          })
+                        }
+                        className={cn(
+                          "group whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold select-none transition-colors",
+                          isActive ? "text-primary" : "text-muted-foreground cursor-pointer hover:text-foreground",
+                        )}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {label}
+                          <span className="inline-flex size-3.5 items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                            {!isActive && <ArrowUpDown className="size-3" />}
+                          </span>
+                          {isActive && (
+                            dir === "asc"
+                              ? <ArrowUp className="size-3" />
+                              : <ArrowDown className="size-3" />
+                          )}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
