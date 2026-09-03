@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { DatePickerRange } from "@/components/DatePickerRange";
+import { QuarterFilter, QUARTER_RANGES } from "@/components/QuarterFilter";
 import { SummaryCards } from "@/components/SummaryCards";
 import { LineChartComparison } from "@/components/LineChartComparison";
 import { BarChartVertical } from "@/components/BarChartVertical";
@@ -81,13 +81,8 @@ export default function Dashboard() {
     ประเภท: [],
   });
 
-  // Date range (default: all data)
-  const [dateRange, setDateRange] = useState({
-    startMonth: 1,
-    startYear: 2024,
-    endMonth: 12,
-    endYear: 2025,
-  });
+  // Quarter filter (default: all quarters)
+  const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
 
   // Table search, sorting & pagination
   const [tableSearch, setTableSearch] = useState("");
@@ -102,23 +97,6 @@ export default function Dashboard() {
     try {
       const d = await fetchAllData();
       setData(d);
-
-      // Auto-set date range from data
-      if (d.trplan.length > 0) {
-        const parsed = d.trplan
-          .map((r) => parseMonthYear(r.เดือน))
-          .filter((p) => p.month > 0);
-        if (parsed.length > 0) {
-          const years = parsed.map((p) => p.year);
-          const months = parsed.map((p) => p.month);
-          setDateRange({
-            startMonth: Math.min(...months),
-            startYear: Math.min(...years),
-            endMonth: Math.max(...months),
-            endYear: Math.max(...years),
-          });
-        }
-      }
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -135,15 +113,21 @@ export default function Dashboard() {
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    let rows = data.trplan.filter((r) =>
-      isInDateRange(
-        r,
-        dateRange.startMonth,
-        dateRange.startYear,
-        dateRange.endMonth,
-        dateRange.endYear,
-      ),
-    );
+    let rows = data.trplan;
+    if (selectedQuarter) {
+      const q = QUARTER_RANGES[selectedQuarter];
+      if (q) {
+        rows = rows.filter((r) =>
+          isInDateRange(
+            r,
+            q.startMonth,
+            q.startYear,
+            q.endMonth,
+            q.endYear,
+          ),
+        );
+      }
+    }
     for (const col of FILTER_COLS) {
       const sel = filters[col.key];
       if (sel.length > 0) {
@@ -153,7 +137,7 @@ export default function Dashboard() {
       }
     }
     return rows;
-  }, [data, filters, dateRange]);
+  }, [data, filters, selectedQuarter]);
 
   // Unique options per filter column
   const filterOptions = useMemo(() => {
@@ -524,12 +508,9 @@ export default function Dashboard() {
                 }
               />
             ))}
-            <DatePickerRange
-              startMonth={dateRange.startMonth}
-              startYear={dateRange.startYear}
-              endMonth={dateRange.endMonth}
-              endYear={dateRange.endYear}
-              onChange={setDateRange}
+            <QuarterFilter
+              selected={selectedQuarter}
+              onChange={setSelectedQuarter}
             />
           </div>
         </div>
