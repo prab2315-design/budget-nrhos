@@ -482,6 +482,26 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ── Summary Cards ──────────────── */}
+        <SummaryCards
+          planIncome={planIncome}
+          planExpense={planExpense}
+          actualIncome={actualIncome}
+          actualExpense={actualExpense}
+        />
+
+        {/* ── Charts ─────────────────────── */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <LineChartComparison
+            data={lineChartData}
+            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
+          />
+          <BarChartVertical
+            data={barChartData}
+            title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
+          />
+        </div>
+
         {/* ── Filters ────────────────────── */}
         <div className="glass-card relative z-10 p-5">
           <div className="mb-3 flex items-center gap-2">
@@ -508,26 +528,6 @@ export default function Dashboard() {
               onChange={setDateRange}
             />
           </div>
-        </div>
-
-        {/* ── Summary Cards ──────────────── */}
-        <SummaryCards
-          planIncome={planIncome}
-          planExpense={planExpense}
-          actualIncome={actualIncome}
-          actualExpense={actualExpense}
-        />
-
-        {/* ── Charts ─────────────────────── */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <LineChartComparison
-            data={lineChartData}
-            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
-          />
-          <BarChartVertical
-            data={barChartData}
-            title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
-          />
         </div>
 
         {/* ── Data Table ─────────────────── */}
