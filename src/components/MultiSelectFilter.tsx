@@ -116,7 +116,7 @@ export function MultiSelectFilter({
 
       {isOpen && (
         <div className="glass-card absolute z-50 mt-1 max-h-64 w-full overflow-hidden shadow-lg">
-          <div className="border-b border-white/10 p-2">
+          <div className="border-b border-black/10 p-2">
             <input
               ref={inputRef}
               type="text"
@@ -126,7 +126,7 @@ export function MultiSelectFilter({
               className="glass-input w-full px-3 py-1.5 text-sm outline-none"
             />
           </div>
-          <div className="flex items-center justify-between border-b border-white/10 px-2 py-1">
+          <div className="flex items-center justify-between border-b border-black/10 px-2 py-1">
             <button
               type="button"
               onClick={selectAll}
@@ -157,7 +157,7 @@ export function MultiSelectFilter({
                   onClick={() => toggleOption(option)}
                   className={cn(
                     "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                    "hover:bg-white/5",
+                    "hover:bg-black/5",
                     isSelected && "bg-primary/10"
                   )}
                 >
@@ -166,7 +166,7 @@ export function MultiSelectFilter({
                       "flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
                       isSelected
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-white/20"
+                        : "border-black/20"
                     )}
                   >
                     {isSelected && <Check className="size-3" />}

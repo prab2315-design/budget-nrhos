@@ -67,18 +67,18 @@ export function LineChartComparison({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="rgba(15,23,42,0.08)"
               vertical={false}
             />
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
               width={80}
@@ -92,34 +92,34 @@ export function LineChartComparison({
             <Line
               type="monotone"
               dataKey="แผนรายรับ"
-              stroke="#60a5fa"
+              stroke="#15803d"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#60a5fa" }}
+              dot={{ r: 3, fill: "#15803d" }}
               activeDot={{ r: 5 }}
             />
             <Line
               type="monotone"
               dataKey="แผนรายจ่าย"
-              stroke="#fbbf24"
+              stroke="#c2410c"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#fbbf24" }}
+              dot={{ r: 3, fill: "#c2410c" }}
               activeDot={{ r: 5 }}
             />
             <Line
               type="monotone"
               dataKey="รายรับจริง"
-              stroke="#34d399"
+              stroke="#22c55e"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#34d399" }}
+              dot={{ r: 3, fill: "#22c55e" }}
               activeDot={{ r: 5 }}
               strokeDasharray="6 3"
             />
             <Line
               type="monotone"
               dataKey="รายจ่ายจริง"
-              stroke="#fb7185"
+              stroke="#fb923c"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#fb7185" }}
+              dot={{ r: 3, fill: "#fb923c" }}
               activeDot={{ r: 5 }}
               strokeDasharray="6 3"
             />

@@ -459,10 +459,10 @@ export default function Dashboard() {
             {/* LIVE indicator */}
             <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1">
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-xs font-medium text-emerald-400">LIVE</span>
+              <span className="text-xs font-medium text-emerald-600">LIVE</span>
             </div>
             {/* Sync button */}
             <button
@@ -470,8 +470,8 @@ export default function Dashboard() {
               onClick={fetchData}
               disabled={syncing}
               className={cn(
-                "flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
-                "hover:bg-white/15 hover:shadow-md",
+                "flex items-center gap-2 rounded-xl border border-black/10 bg-black/5 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
+                "hover:bg-black/10 hover:shadow-md",
                 "disabled:opacity-50",
               )}
             >
@@ -562,7 +562,7 @@ export default function Dashboard() {
                 type="button"
                 onClick={exportPDF}
                 disabled={!filteredData.length}
-                className="flex items-center gap-1.5 rounded-lg bg-rose-500/15 px-3 py-1.5 text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/25 disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-orange-500/15 px-3 py-1.5 text-xs font-medium text-orange-600 transition-colors hover:bg-orange-500/25 disabled:opacity-40"
               >
                 <FileDown className="size-3.5" />
                 PDF
@@ -571,7 +571,7 @@ export default function Dashboard() {
                 type="button"
                 onClick={exportCSV}
                 disabled={!filteredData.length}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/25 disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/25 disabled:opacity-40"
               >
                 <FileDown className="size-3.5" />
                 CSV
@@ -579,10 +579,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-white/8">
+          <div className="overflow-x-auto rounded-xl border border-black/10">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
+                <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
                   {([
                     { key: "ลำดับ", label: "ลำดับ" },
                     { key: "เดือน", label: "เดือน" },
@@ -642,7 +642,7 @@ export default function Dashboard() {
                 {pagedData.map((r, i) => (
                   <tr
                     key={`${safePage}-${i}`}
-                    className="border-b border-white/5 transition-colors hover:bg-white/5"
+                    className="border-b border-black/5 transition-colors hover:bg-black/5"
                   >
                     <td className="whitespace-nowrap px-3 py-2 text-xs">
                       {r.ลำดับ}
@@ -674,7 +674,7 @@ export default function Dashboard() {
                           "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
                           r.ประเภท === "รายรับ"
                             ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700",
+                            : "bg-orange-100 text-orange-700",
                         )}
                       >
                         {r.ประเภท}
@@ -697,7 +697,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setTablePage((p) => Math.max(0, p - 1))}
                   disabled={safePage === 0}
-                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-30"
+                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-black/10 disabled:opacity-30"
                 >
                   ก่อนหน้า
                 </button>
@@ -727,7 +727,7 @@ export default function Dashboard() {
                           "min-w-[28px] rounded-lg px-2 py-1 text-xs font-medium transition-colors",
                           item === safePage
                             ? "bg-primary/20 text-primary"
-                            : "text-muted-foreground hover:bg-white/5",
+                            : "text-muted-foreground hover:bg-black/5",
                         )}
                       >
                         {item + 1}
@@ -738,7 +738,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setTablePage((p) => Math.min(tableTotalPages - 1, p + 1))}
                   disabled={safePage >= tableTotalPages - 1}
-                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-30"
+                  className="glass-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-black/10 disabled:opacity-30"
                 >
                   ถัดไป
                 </button>

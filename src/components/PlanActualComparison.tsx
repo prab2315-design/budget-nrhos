@@ -65,7 +65,7 @@ function DiffChip({
           </p>
           <p className="mt-0.5 text-sm font-semibold text-foreground">—</p>
         </div>
-        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+        <span className="rounded-full bg-black/5 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
           ไม่มีข้อมูลแผน
         </span>
       </div>
@@ -86,7 +86,7 @@ function DiffChip({
         <p
           className={cn(
             "mt-0.5 text-sm font-semibold",
-            good ? "text-emerald-400" : "text-rose-400",
+            good ? "text-emerald-600" : "text-orange-600",
           )}
         >
           {diff >= 0 ? "+" : "−"}
@@ -97,8 +97,8 @@ function DiffChip({
         className={cn(
           "rounded-full px-2.5 py-1 text-[10px] font-medium",
           good
-            ? "bg-emerald-500/15 text-emerald-400"
-            : "bg-rose-500/15 text-rose-400",
+            ? "bg-emerald-500/15 text-emerald-700"
+            : "bg-orange-500/15 text-orange-700",
         )}
       >
         {label}
@@ -121,10 +121,10 @@ export function PlanActualComparison({
       : null;
 
   const data = [
-    { name: "แผนรายรับ", value: planIncome, fill: "#60a5fa" },
-    { name: "รายรับสะสม", value: actualIncome, fill: "#34d399" },
-    { name: "แผนรายจ่าย", value: planExpense, fill: "#fbbf24" },
-    { name: "รายจ่ายสะสม", value: actualExpense, fill: "#fb7185" },
+    { name: "แผนรายรับ", value: planIncome, fill: "#15803d" },
+    { name: "รายรับสะสม", value: actualIncome, fill: "#22c55e" },
+    { name: "แผนรายจ่าย", value: planExpense, fill: "#ea580c" },
+    { name: "รายจ่ายสะสม", value: actualExpense, fill: "#fb923c" },
   ];
 
   return (
@@ -141,19 +141,19 @@ export function PlanActualComparison({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="rgba(15,23,42,0.08)"
               vertical={false}
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
               interval={0}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
               width={80}
@@ -169,7 +169,7 @@ export function PlanActualComparison({
                 formatter={(value: number | string) =>
                   formatCurrency(Number(value))
                 }
-                style={{ fontSize: 11, fill: "rgba(255,255,255,0.85)" }}
+                style={{ fontSize: 11, fill: "rgba(15,23,42,0.8)" }}
               />
             </Bar>
           </BarChart>

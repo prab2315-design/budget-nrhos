@@ -68,18 +68,18 @@ export function BarChartVertical({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="rgba(15,23,42,0.08)"
               vertical={false}
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
+              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
               width={80}
@@ -92,13 +92,13 @@ export function BarChartVertical({
             />
             <Bar
               dataKey="รายรับ"
-              fill="#60a5fa"
+              fill="#22c55e"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
             />
             <Bar
               dataKey="รายจ่าย"
-              fill="#fbbf24"
+              fill="#fb923c"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
             />
