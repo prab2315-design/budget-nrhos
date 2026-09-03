@@ -149,7 +149,9 @@ export default function Dashboard() {
     for (const col of FILTER_COLS) {
       const sel = filters[col.key];
       if (sel.length > 0) {
-        rows = rows.filter((r) => sel.includes(String(r[col.key] as unknown)));
+        rows = rows.filter((r) =>
+          sel.includes(String(r[col.key] ?? "").trim()),
+        );
       }
     }
     return rows;
