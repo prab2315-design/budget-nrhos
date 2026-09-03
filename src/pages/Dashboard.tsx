@@ -269,12 +269,13 @@ export default function Dashboard() {
   /* ─── table data ────────────────────────────────── */
 
   const tableData = useMemo(() => {
-    let rows = tableSearch.trim()
-      ? filteredData.filter((r) => {
-          const q = tableSearch.toLowerCase();
-          return Object.values(r).some((v) => String(v).toLowerCase().includes(q));
-        })
-      : [...filteredData];
+    let rows = filteredData.filter((r) => r.ยอดจริง !== 0);
+    if (tableSearch.trim()) {
+      const q = tableSearch.toLowerCase();
+      rows = rows.filter((r) =>
+        Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
+      );
+    }
 
     if (sortConfig) {
       const { key, dir } = sortConfig;
