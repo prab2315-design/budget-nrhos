@@ -27,6 +27,7 @@ import { DatePickerRange } from "@/components/DatePickerRange";
 import { SummaryCards } from "@/components/SummaryCards";
 import { LineChartComparison } from "@/components/LineChartComparison";
 import { BarChartVertical } from "@/components/BarChartVertical";
+import { PlanActualComparison } from "@/components/PlanActualComparison";
 
 // Logo URL for PDF export header
 const LOGO_URL =
@@ -484,6 +485,14 @@ export default function Dashboard() {
 
         {/* ── Summary Cards ──────────────── */}
         <SummaryCards
+          planIncome={planIncome}
+          planExpense={planExpense}
+          actualIncome={actualIncome}
+          actualExpense={actualExpense}
+        />
+
+        {/* ── Plan vs Actual comparison ──── */}
+        <PlanActualComparison
           planIncome={planIncome}
           planExpense={planExpense}
           actualIncome={actualIncome}
