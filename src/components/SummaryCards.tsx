@@ -18,35 +18,39 @@ export function SummaryCards({
   const cards = [
     {
       title: "แผนรายรับ",
+      subtitle: "งบประมาณ",
       value: planIncome,
       icon: Target,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50/80",
-      borderColor: "border-blue-200/60",
+      color: "text-sky-400",
+      bgColor: "bg-sky-500/15",
+      accentColor: "bg-sky-400",
     },
     {
       title: "แผนรายจ่าย",
+      subtitle: "งบประมาณ",
       value: planExpense,
       icon: Wallet,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50/80",
-      borderColor: "border-amber-200/60",
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/15",
+      accentColor: "bg-amber-400",
     },
     {
-      title: "รวมรายรับ",
+      title: "รายรับสะสม",
+      subtitle: "จริง",
       value: actualIncome,
       icon: TrendingUp,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50/80",
-      borderColor: "border-emerald-200/60",
+      color: "text-emerald-400",
+      bgColor: "bg-emerald-500/15",
+      accentColor: "bg-emerald-400",
     },
     {
-      title: "รวมรายจ่าย",
+      title: "รายจ่ายสะสม",
+      subtitle: "จริง",
       value: actualExpense,
       icon: TrendingDown,
-      color: "text-rose-600",
-      bgColor: "bg-rose-50/80",
-      borderColor: "border-rose-200/60",
+      color: "text-rose-400",
+      bgColor: "bg-rose-500/15",
+      accentColor: "bg-rose-400",
     },
   ];
 
@@ -58,14 +62,17 @@ export function SummaryCards({
           <div
             key={card.title}
             className={cn(
-              "glass-card relative overflow-hidden p-5 transition-all duration-200",
-              "hover:shadow-lg hover:scale-[1.01]"
+              "glass-card group relative overflow-hidden p-5 transition-all duration-200",
+              "hover:shadow-lg hover:shadow-black/10 hover:scale-[1.01]"
             )}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {card.title}
+                </p>
+                <p className="mt-1 text-[10px] font-medium text-muted-foreground/60">
+                  {card.subtitle}
                 </p>
                 <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
                   {formatCurrencyFull(card.value)}
@@ -73,21 +80,18 @@ export function SummaryCards({
               </div>
               <div
                 className={cn(
-                  "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                  card.bgColor,
-                  card.borderColor,
-                  "border"
+                  "flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                  card.bgColor
                 )}
               >
                 <Icon className={cn("size-5", card.color)} />
               </div>
             </div>
-            {/* Subtle gradient accent */}
+            {/* Accent bar */}
             <div
               className={cn(
-                "absolute bottom-0 left-0 h-1 w-full",
-                card.color.replace("text-", "bg-"),
-                "opacity-40"
+                "absolute bottom-0 left-0 h-[2px] w-full opacity-50 transition-opacity group-hover:opacity-100",
+                card.accentColor
               )}
             />
           </div>

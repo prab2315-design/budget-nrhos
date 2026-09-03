@@ -42,7 +42,9 @@ const CustomTooltip = ({
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="font-medium">{formatCurrency(entry.value)}</span>
+          <span className="font-medium text-foreground">
+            {formatCurrency(entry.value)}
+          </span>
         </div>
       ))}
     </div>
@@ -66,18 +68,18 @@ export function BarChartVertical({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="oklch(0.9 0.01 240)"
+              stroke="rgba(255,255,255,0.06)"
               vertical={false}
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "oklch(0.48 0.02 260)" }}
+              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "oklch(0.48 0.02 260)" }}
+              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
               tickLine={false}
               axisLine={false}
               width={80}
@@ -90,13 +92,13 @@ export function BarChartVertical({
             />
             <Bar
               dataKey="รายรับ"
-              fill="#3b82f6"
+              fill="#60a5fa"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
             />
             <Bar
               dataKey="รายจ่าย"
-              fill="#f59e0b"
+              fill="#fbbf24"
               radius={[4, 4, 0, 0]}
               maxBarSize={48}
             />

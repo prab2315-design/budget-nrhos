@@ -415,22 +415,22 @@ export default function Dashboard() {
               }}
             />
             <div>
-              <h1 className="text-lg font-bold text-foreground">
-                แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
+              <h1 className="text-lg font-bold tracking-tight text-foreground">
+                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
               </h1>
               <p className="text-xs text-muted-foreground">
-                ภาพรวมระบบวิเคราะห์ข้อมูลงบประมาณ
+                แดชบอร์ดวิเคราะห์งบประมาณ ณ ปัจจุบัน
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {/* LIVE indicator */}
-            <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-3 py-1">
+            <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
               </span>
-              <span className="text-xs font-medium text-emerald-700">LIVE</span>
+              <span className="text-xs font-medium text-emerald-400">LIVE</span>
             </div>
             {/* Sync button */}
             <button
@@ -438,15 +438,15 @@ export default function Dashboard() {
               onClick={fetchData}
               disabled={syncing}
               className={cn(
-                "flex items-center gap-2 rounded-xl border border-white/50 bg-white/60 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
-                "hover:bg-white/80 hover:shadow-md",
+                "flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
+                "hover:bg-white/15 hover:shadow-md",
                 "disabled:opacity-50",
               )}
             >
               <RefreshCw
                 className={cn("size-4", syncing && "animate-spin")}
               />
-              ซิงก์ข้อมูลใหม่
+              ซิงก์ใหม่
             </button>
           </div>
         </div>
@@ -455,7 +455,7 @@ export default function Dashboard() {
         <div className="glass-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <Search className="size-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">ตัวกรองข้อมูล</h2>
+            <h2 className="text-sm font-semibold text-foreground">กรองข้อมูล</h2>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
             {FILTER_COLS.map((col) => (
@@ -491,11 +491,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <LineChartComparison
             data={lineChartData}
-            title="กราฟเส้น เปรียบเทียบแผน vs จริง จำแนกตามเดือน"
+            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
           />
           <BarChartVertical
             data={barChartData}
-            title="กราฟแท่งแนวตั้ง รวมยอดจริง จำแนกตามเดือน"
+            title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
           />
         </div>
 
@@ -503,7 +503,7 @@ export default function Dashboard() {
         <div className="glass-card p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-sm font-semibold text-foreground">
-              ตารางข้อมูล ({tableData.length} รายการ)
+              บันทึกรายการ ({tableData.length} รายการ)
             </h2>
             <div className="flex items-center gap-3">
               {/* Table search */}
@@ -511,7 +511,7 @@ export default function Dashboard() {
                 <Search className="size-4 shrink-0 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="ค้นหาในตาราง..."
+                  placeholder="พิมพ์เพื่อค้นหา..."
                   value={tableSearch}
                   onChange={(e) => setTableSearch(e.target.value)}
                   className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -522,7 +522,7 @@ export default function Dashboard() {
                 type="button"
                 onClick={exportPDF}
                 disabled={!filteredData.length}
-                className="flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-500/20 disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-rose-500/15 px-3 py-1.5 text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/25 disabled:opacity-40"
               >
                 <FileDown className="size-3.5" />
                 PDF
@@ -531,7 +531,7 @@ export default function Dashboard() {
                 type="button"
                 onClick={exportCSV}
                 disabled={!filteredData.length}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20 disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/25 disabled:opacity-40"
               >
                 <FileDown className="size-3.5" />
                 CSV
@@ -539,10 +539,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-white/30">
+          <div className="overflow-x-auto rounded-xl border border-white/8">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-white/40 bg-white/30 backdrop-blur-sm">
+                <tr className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
                   {[
                     "ลำดับ",
                     "เดือน",
@@ -568,14 +568,14 @@ export default function Dashboard() {
                       colSpan={7}
                       className="px-3 py-8 text-center text-sm text-muted-foreground"
                     >
-                      ไม่มีข้อมูล
+                      ไม่พบข้อมูลที่ตรงกับตัวกรอง
                     </td>
                   </tr>
                 )}
                 {tableData.map((r, i) => (
                   <tr
                     key={i}
-                    className="border-b border-white/20 transition-colors hover:bg-white/20"
+                    className="border-b border-white/5 transition-colors hover:bg-white/5"
                   >
                     <td className="whitespace-nowrap px-3 py-2 text-xs">
                       {r.ลำดับ}
@@ -622,7 +622,7 @@ export default function Dashboard() {
 
         {/* ── Footer ─────────────────────── */}
         <div className="pb-4 text-center text-xs text-muted-foreground/60">
-          ข้อมูล ณ {data?.lastUpdated?.toLocaleString("th-TH") ?? "-"} · แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
+          อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
         </div>
       </div>
     </main>

@@ -15,7 +15,7 @@ export function MultiSelectFilter({
   options,
   selected,
   onChange,
-  placeholder = "ค้นหา...",
+  placeholder = "เลือกรายการ...",
 }: MultiSelectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -58,7 +58,7 @@ export function MultiSelectFilter({
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+      <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       <button
@@ -83,7 +83,7 @@ export function MultiSelectFilter({
               {selected.map((s) => (
                 <span
                   key={s}
-                  className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                  className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
                 >
                   <span className="max-w-[120px] truncate">{s}</span>
                   <button
@@ -92,7 +92,7 @@ export function MultiSelectFilter({
                       e.stopPropagation();
                       toggleOption(s);
                     }}
-                    className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-primary/25"
                   >
                     <X className="size-3" />
                   </button>
@@ -102,7 +102,7 @@ export function MultiSelectFilter({
           )}
           {selected.length > 2 && (
             <span className="text-xs font-medium text-primary">
-              เลือก {selected.length} รายการ
+              เลือกแล้ว {selected.length} รายการ
             </span>
           )}
         </div>
@@ -116,17 +116,17 @@ export function MultiSelectFilter({
 
       {isOpen && (
         <div className="glass-card absolute z-50 mt-1 max-h-64 w-full overflow-hidden shadow-lg">
-          <div className="border-b border-border/50 p-2">
+          <div className="border-b border-white/10 p-2">
             <input
               ref={inputRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="พิมพ์ค้นหา..."
+              placeholder="พิมพ์เพื่อค้นหา..."
               className="glass-input w-full px-3 py-1.5 text-sm outline-none"
             />
           </div>
-          <div className="flex items-center justify-between border-b border-border/50 px-2 py-1">
+          <div className="flex items-center justify-between border-b border-white/10 px-2 py-1">
             <button
               type="button"
               onClick={selectAll}
@@ -139,13 +139,13 @@ export function MultiSelectFilter({
               onClick={clearAll}
               className="text-xs font-medium text-muted-foreground hover:underline"
             >
-              ล้างทั้งหมด
+              ล้าง
             </button>
           </div>
           <div className="overflow-y-auto max-h-48 p-1">
             {filteredOptions.length === 0 && (
               <p className="py-2 text-center text-xs text-muted-foreground">
-                ไม่พบข้อมูล
+                ไม่พบข้อมูลที่ตรงกัน
               </p>
             )}
             {filteredOptions.map((option) => {
@@ -157,8 +157,8 @@ export function MultiSelectFilter({
                   onClick={() => toggleOption(option)}
                   className={cn(
                     "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                    "hover:bg-primary/5",
-                    isSelected && "bg-primary/8"
+                    "hover:bg-white/5",
+                    isSelected && "bg-primary/10"
                   )}
                 >
                   <div
@@ -166,7 +166,7 @@ export function MultiSelectFilter({
                       "flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
                       isSelected
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border"
+                        : "border-white/20"
                     )}
                   >
                     {isSelected && <Check className="size-3" />}

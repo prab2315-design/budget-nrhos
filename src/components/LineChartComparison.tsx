@@ -8,7 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency, truncateText } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 interface ChartDataPoint {
   month: string;
@@ -43,7 +43,9 @@ const CustomTooltip = ({
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="font-medium">{formatCurrency(entry.value)}</span>
+          <span className="font-medium text-foreground">
+            {formatCurrency(entry.value)}
+          </span>
         </div>
       ))}
     </div>
@@ -65,18 +67,18 @@ export function LineChartComparison({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="oklch(0.9 0.01 240)"
+              stroke="rgba(255,255,255,0.06)"
               vertical={false}
             />
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 11, fill: "oklch(0.48 0.02 260)" }}
+              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "oklch(0.48 0.02 260)" }}
+              tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
               tickLine={false}
               axisLine={false}
               width={80}
@@ -90,34 +92,34 @@ export function LineChartComparison({
             <Line
               type="monotone"
               dataKey="แผนรายรับ"
-              stroke="#3b82f6"
+              stroke="#60a5fa"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#3b82f6" }}
+              dot={{ r: 3, fill: "#60a5fa" }}
               activeDot={{ r: 5 }}
             />
             <Line
               type="monotone"
               dataKey="แผนรายจ่าย"
-              stroke="#f59e0b"
+              stroke="#fbbf24"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#f59e0b" }}
+              dot={{ r: 3, fill: "#fbbf24" }}
               activeDot={{ r: 5 }}
             />
             <Line
               type="monotone"
               dataKey="รายรับจริง"
-              stroke="#10b981"
+              stroke="#34d399"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#10b981" }}
+              dot={{ r: 3, fill: "#34d399" }}
               activeDot={{ r: 5 }}
               strokeDasharray="6 3"
             />
             <Line
               type="monotone"
               dataKey="รายจ่ายจริง"
-              stroke="#f43f5e"
+              stroke="#fb7185"
               strokeWidth={2}
-              dot={{ r: 3, fill: "#f43f5e" }}
+              dot={{ r: 3, fill: "#fb7185" }}
               activeDot={{ r: 5 }}
               strokeDasharray="6 3"
             />

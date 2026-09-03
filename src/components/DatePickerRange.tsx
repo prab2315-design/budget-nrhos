@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { getThaiMonth, toBuddhistYear } from "@/lib/format";
 
 interface DatePickerRangeProps {
-  startMonth: number; // 1-12
-  startYear: number; // CE year
+  startMonth: number;
+  startYear: number;
   endMonth: number;
   endYear: number;
   onChange: (range: {
@@ -30,15 +30,9 @@ export function DatePickerRange({
 }: DatePickerRangeProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Generate year options (2020-2030 in CE)
   const yearOptions = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
-  function updateStart(
-    field: "month" | "year",
-    value: number
-  ) {
-    const updates: Record<string, number> = {};
-    updates[`start${field === "month" ? "Month" : "Year"}`] = value;
+  function updateStart(field: "month" | "year", value: number) {
     onChange({
       startMonth: field === "month" ? value : startMonth,
       startYear: field === "year" ? value : startYear,
@@ -47,10 +41,7 @@ export function DatePickerRange({
     });
   }
 
-  function updateEnd(
-    field: "month" | "year",
-    value: number
-  ) {
+  function updateEnd(field: "month" | "year", value: number) {
     onChange({
       startMonth,
       startYear,
@@ -59,11 +50,11 @@ export function DatePickerRange({
     });
   }
 
-  const displayText = `${getThaiMonth(startMonth)} ${toBuddhistYear(startYear)} - ${getThaiMonth(endMonth)} ${toBuddhistYear(endYear)}`;
+  const displayText = `${getThaiMonth(startMonth)} ${toBuddhistYear(startYear)} – ${getThaiMonth(endMonth)} ${toBuddhistYear(endYear)}`;
 
   return (
     <div className="relative">
-      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+      <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         ช่วงเวลา
       </label>
       <button
@@ -82,7 +73,6 @@ export function DatePickerRange({
       {isOpen && (
         <div className="glass-card absolute z-50 mt-1 w-[340px] p-4 shadow-lg">
           <div className="space-y-3">
-            {/* Start date */}
             <div>
               <p className="mb-1.5 text-xs font-medium text-muted-foreground">
                 จาก
@@ -90,9 +80,7 @@ export function DatePickerRange({
               <div className="flex gap-2">
                 <select
                   value={startMonth}
-                  onChange={(e) =>
-                    updateStart("month", parseInt(e.target.value))
-                  }
+                  onChange={(e) => updateStart("month", parseInt(e.target.value))}
                   className="glass-input flex-1 px-2 py-1.5 text-sm outline-none"
                 >
                   {MONTH_OPTIONS.map((m) => (
@@ -103,9 +91,7 @@ export function DatePickerRange({
                 </select>
                 <select
                   value={startYear}
-                  onChange={(e) =>
-                    updateStart("year", parseInt(e.target.value))
-                  }
+                  onChange={(e) => updateStart("year", parseInt(e.target.value))}
                   className="glass-input flex-1 px-2 py-1.5 text-sm outline-none"
                 >
                   {yearOptions.map((y) => (
@@ -117,7 +103,6 @@ export function DatePickerRange({
               </div>
             </div>
 
-            {/* End date */}
             <div>
               <p className="mb-1.5 text-xs font-medium text-muted-foreground">
                 ถึง
@@ -125,9 +110,7 @@ export function DatePickerRange({
               <div className="flex gap-2">
                 <select
                   value={endMonth}
-                  onChange={(e) =>
-                    updateEnd("month", parseInt(e.target.value))
-                  }
+                  onChange={(e) => updateEnd("month", parseInt(e.target.value))}
                   className="glass-input flex-1 px-2 py-1.5 text-sm outline-none"
                 >
                   {MONTH_OPTIONS.map((m) => (
@@ -138,9 +121,7 @@ export function DatePickerRange({
                 </select>
                 <select
                   value={endYear}
-                  onChange={(e) =>
-                    updateEnd("year", parseInt(e.target.value))
-                  }
+                  onChange={(e) => updateEnd("year", parseInt(e.target.value))}
                   className="glass-input flex-1 px-2 py-1.5 text-sm outline-none"
                 >
                   {yearOptions.map((y) => (
@@ -152,7 +133,6 @@ export function DatePickerRange({
               </div>
             </div>
 
-            {/* Close button */}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
