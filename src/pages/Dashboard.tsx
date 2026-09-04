@@ -171,14 +171,12 @@ export default function Dashboard() {
       else aExp += r.ยอดจริง;
     }
 
-    // Plan totals – deduplicate by รหัสบัญชี
-    const summaryDeduped = new Map<string, { แผนรายรับ: number; แผนรายจ่าย: number }>();
-    for (const r of data.group) {
-      if (!summaryDeduped.has(r.รหัสบัญชี)) summaryDeduped.set(r.รหัสบัญชี, r);
-    }
+    // Plan totals – sum every row in the group sheet (the sheet reuses the
+    // same รหัสบัญชี across งบค่าเสื่อม/เงินบริจาค/เงินบำรุง rows, so deduping
+    // by รหัสบัญชี would drop real plan amounts)
     let pInc = 0;
     let pExp = 0;
-    for (const r of summaryDeduped.values()) {
+    for (const r of data.group) {
       pInc += r.แผนรายรับ;
       pExp += r.แผนรายจ่าย;
     }
