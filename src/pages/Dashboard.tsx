@@ -28,6 +28,7 @@ import { LineChartComparison } from "@/components/LineChartComparison";
 import { BarChartVertical } from "@/components/BarChartVertical";
 import { PlanActualComparison } from "@/components/PlanActualComparison";
 import { RevenueBreakdown, type RevenueBreakdownRow } from "@/components/RevenueBreakdown";
+import { ExpenseBreakdown, type ExpenseBreakdownRow } from "@/components/ExpenseBreakdown";
 
 // Logo URL for PDF export header
 const LOGO_URL =
@@ -228,6 +229,47 @@ export default function Dashboard() {
         const nb = parseInt(b.หมวด.match(/^(\d+)/)?.[1] ?? "99", 10);
         return na - nb;
       });
+  }, [data, filteredData]);
+
+  /* ─── expense breakdown (แผนรายจ่าย by หมวด) ───── */
+
+  const expenseRows = useMemo<ExpenseBreakdownRow[]>(() => {
+    if (!data) return [];
+
+    // Expense categories: หมวด that appear with ประเภท = "รายจ่าย" in TRplan
+    const expenseCats = new Set<string>();
+    for (const r of data.trplan) {
+      if (String(r.ประเภท ?? "").trim() === "รายจ่าย") {
+        expenseCats.add(String(r.หมวด ?? "").trim());
+      }
+    }
+
+    // Plan per หมวด from group sheet (annual budget, not filtered by time)
+    const planMap = new Map<string, number>();
+    for (const r of data.group) {
+      const key = String(r.หมวด ?? "").trim();
+      if (expenseCats.has(key) && r.แผนรายจ่าย !== 0) {
+        planMap.set(key, (planMap.get(key) ?? 0) + r.แผนรายจ่าย);
+      }
+    }
+
+    // Actual per หมวด from filtered rows (รายจ่าย only)
+    const actualMap = new Map<string, number>();
+    for (const r of filteredData) {
+      if (String(r.ประเภท ?? "").trim() !== "รายจ่าย") continue;
+      const key = String(r.หมวด ?? "").trim();
+      if (!key) continue;
+      actualMap.set(key, (actualMap.get(key) ?? 0) + r.ยอดจริง);
+    }
+
+    const keys = new Set([...planMap.keys(), ...actualMap.keys()]);
+    return [...keys]
+      .map((key) => ({
+        หมวด: key,
+        แผน: planMap.get(key) ?? 0,
+        ผล: actualMap.get(key) ?? 0,
+      }))
+      .filter((r) => r.แผน !== 0 || r.ผล !== 0);
   }, [data, filteredData]);
 
   /* ─── chart data (aggregated) ───────────────────── */
@@ -527,6 +569,9 @@ export default function Dashboard() {
 
         {/* ── Revenue breakdown (แผนรายรับ) ── */}
         <RevenueBreakdown rows={revenueRows} />
+
+        {/* ── Expense breakdown (แผนรายจ่าย) ── */}
+        <ExpenseBreakdown rows={expenseRows} />
 
         {/* ── Charts ─────────────────────── */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
