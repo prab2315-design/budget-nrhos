@@ -597,13 +597,13 @@ export default function Dashboard() {
             actualIncome={actualIncome}
             actualExpense={actualExpense}
           />
-          <LineChartComparison
-            data={lineChartData}
-            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
-          />
           <BarChartVertical
             data={barChartData}
             title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
+          />
+          <LineChartComparison
+            data={lineChartData}
+            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
           />
         </div>
 
