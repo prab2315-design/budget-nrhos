@@ -27,6 +27,7 @@ import { SummaryCards } from "@/components/SummaryCards";
 import { LineChartComparison } from "@/components/LineChartComparison";
 import { BarChartVertical } from "@/components/BarChartVertical";
 import { PlanActualComparison } from "@/components/PlanActualComparison";
+import { RevenueBreakdown, type RevenueBreakdownRow } from "@/components/RevenueBreakdown";
 
 // Logo URL for PDF export header
 const LOGO_URL =
@@ -181,6 +182,52 @@ export default function Dashboard() {
       pExp += r.แผนรายจ่าย;
     }
     return { planIncome: pInc, planExpense: pExp, actualIncome: aInc, actualExpense: aExp };
+  }, [data, filteredData]);
+
+  /* ─── revenue breakdown (แผนรายรับ by หมวด) ───── */
+
+  const revenueRows = useMemo<RevenueBreakdownRow[]>(() => {
+    if (!data) return [];
+
+    // Income categories: หมวด that appear with ประเภท = "รายรับ" in TRplan
+    const incomeCats = new Set<string>();
+    for (const r of data.trplan) {
+      if (String(r.ประเภท ?? "").trim() === "รายรับ") {
+        incomeCats.add(String(r.หมวด ?? "").trim());
+      }
+    }
+
+    // Plan per หมวด from group sheet (annual budget, not filtered by time)
+    const planMap = new Map<string, number>();
+    for (const r of data.group) {
+      const key = String(r.หมวด ?? "").trim();
+      if (incomeCats.has(key) && r.แผนรายรับ !== 0) {
+        planMap.set(key, (planMap.get(key) ?? 0) + r.แผนรายรับ);
+      }
+    }
+
+    // Actual per หมวด from filtered rows (รายรับ only)
+    const actualMap = new Map<string, number>();
+    for (const r of filteredData) {
+      if (String(r.ประเภท ?? "").trim() !== "รายรับ") continue;
+      const key = String(r.หมวด ?? "").trim();
+      if (!key) continue;
+      actualMap.set(key, (actualMap.get(key) ?? 0) + r.ยอดจริง);
+    }
+
+    const keys = new Set([...planMap.keys(), ...actualMap.keys()]);
+    return [...keys]
+      .map((key) => ({
+        หมวด: key,
+        แผน: planMap.get(key) ?? 0,
+        ผล: actualMap.get(key) ?? 0,
+      }))
+      .filter((r) => r.แผน !== 0 || r.ผล !== 0)
+      .sort((a, b) => {
+        const na = parseInt(a.หมวด.match(/^(\d+)/)?.[1] ?? "99", 10);
+        const nb = parseInt(b.หมวด.match(/^(\d+)/)?.[1] ?? "99", 10);
+        return na - nb;
+      });
   }, [data, filteredData]);
 
   /* ─── chart data (aggregated) ───────────────────── */
@@ -477,6 +524,9 @@ export default function Dashboard() {
           actualIncome={actualIncome}
           actualExpense={actualExpense}
         />
+
+        {/* ── Revenue breakdown (แผนรายรับ) ── */}
+        <RevenueBreakdown rows={revenueRows} />
 
         {/* ── Charts ─────────────────────── */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
