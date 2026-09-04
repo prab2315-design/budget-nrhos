@@ -589,22 +589,14 @@ export default function Dashboard() {
           actualExpense={actualExpense}
         />
 
-        {/* ── Plan vs Actual comparison ──── */}
-        <PlanActualComparison
-          planIncome={planIncome}
-          planExpense={planExpense}
-          actualIncome={actualIncome}
-          actualExpense={actualExpense}
-        />
-
-        {/* ── Revenue breakdown (แผนรายรับ) ── */}
-        <RevenueBreakdown rows={revenueRows} label={periodLabel} />
-
-        {/* ── Expense breakdown (แผนรายจ่าย) ── */}
-        <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
-
-        {/* ── Charts ─────────────────────── */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {/* ── Comparison charts row (สะสม + รายเดือน) ── */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <PlanActualComparison
+            planIncome={planIncome}
+            planExpense={planExpense}
+            actualIncome={actualIncome}
+            actualExpense={actualExpense}
+          />
           <LineChartComparison
             data={lineChartData}
             title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
@@ -614,6 +606,12 @@ export default function Dashboard() {
             title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
           />
         </div>
+
+        {/* ── Revenue breakdown (แผนรายรับ) ── */}
+        <RevenueBreakdown rows={revenueRows} label={periodLabel} />
+
+        {/* ── Expense breakdown (แผนรายจ่าย) ── */}
+        <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
 
         {/* ── Filters ────────────────────── */}
         <div className="glass-card relative z-10 p-5">

@@ -175,7 +175,7 @@ export function PlanActualComparison({
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
         <DiffChip title="รายรับ" diff={incomeDiff} />
         <DiffChip title="รายจ่าย" diff={expenseDiff} />
       </div>
