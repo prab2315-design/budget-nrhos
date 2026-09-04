@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Banknote } from "lucide-react";
+import { Banknote, CalendarDays } from "lucide-react";
 import { formatCurrencyFull } from "@/lib/format";
 
 export interface RevenueBreakdownRow {
@@ -10,6 +10,7 @@ export interface RevenueBreakdownRow {
 
 interface RevenueBreakdownProps {
   rows: RevenueBreakdownRow[];
+  label?: string;
 }
 
 const SECTION_OPERATIONS = "รายรับจากการดำเนินงาน";
@@ -22,7 +23,7 @@ function sectionOf(หมวด: string): string {
   return SECTION_OTHER;
 }
 
-export function RevenueBreakdown({ rows }: RevenueBreakdownProps) {
+export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
   const sections = [
     { name: `1. ${SECTION_OPERATIONS}`, rows: rows.filter((r) => sectionOf(r.หมวด) === SECTION_OPERATIONS) },
     { name: `2. ${SECTION_OTHER}`, rows: rows.filter((r) => sectionOf(r.หมวด) === SECTION_OTHER) },
@@ -45,6 +46,12 @@ export function RevenueBreakdown({ rows }: RevenueBreakdownProps) {
             เปรียบเทียบแผนกับผลจริง จำแนกตามหมวดรายรับ
           </p>
         </div>
+        {label && (
+          <span className="ml-auto inline-flex max-w-[50%] items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            <CalendarDays className="size-3.5 shrink-0" />
+            <span className="truncate">{label}</span>
+          </span>
+        )}
       </div>
 
       {/* Table */}

@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Receipt } from "lucide-react";
+import { Receipt, CalendarDays } from "lucide-react";
 import { formatCurrencyFull } from "@/lib/format";
 
 export interface ExpenseBreakdownRow {
@@ -10,6 +10,7 @@ export interface ExpenseBreakdownRow {
 
 interface ExpenseBreakdownProps {
   rows: ExpenseBreakdownRow[];
+  label?: string;
 }
 
 interface ExpenseSubgroup {
@@ -93,7 +94,7 @@ function Row({ r, indent = false }: { r: ExpenseBreakdownRow; indent?: boolean }
   );
 }
 
-export function ExpenseBreakdown({ rows }: ExpenseBreakdownProps) {
+export function ExpenseBreakdown({ rows, label }: ExpenseBreakdownProps) {
   const sections = buildSections(rows);
 
   const totalPlan = rows.reduce((sum, r) => sum + r.แผน, 0);
@@ -113,6 +114,12 @@ export function ExpenseBreakdown({ rows }: ExpenseBreakdownProps) {
             เปรียบเทียบแผนกับผลจริง จำแนกตามหมวดรายจ่าย
           </p>
         </div>
+        {label && (
+          <span className="ml-auto inline-flex max-w-[50%] items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            <CalendarDays className="size-3.5 shrink-0" />
+            <span className="truncate">{label}</span>
+          </span>
+        )}
       </div>
 
       {/* Table */}

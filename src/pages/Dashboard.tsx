@@ -185,6 +185,36 @@ export default function Dashboard() {
     return { planIncome: pInc, planExpense: pExp, actualIncome: aInc, actualExpense: aExp };
   }, [data, filteredData]);
 
+  /* ─── period label for breakdown cards ──────────── */
+
+  const periodLabel = useMemo(() => {
+    const months = filters.เดือน;
+    if (months.length > 0) {
+      const formatted = months
+        .map((m) => {
+          const { month, year } = parseMonthYear(m);
+          if (!month || !year) return m;
+          return `${getThaiMonthShort(month)} ${String(
+            toBuddhistYear(year),
+          ).slice(-2)}`;
+        })
+        .join(", ");
+      return `ประจำเดือน ${formatted}`;
+    }
+    if (selectedQuarter) {
+      const q = QUARTER_RANGES[selectedQuarter];
+      if (q) {
+        const fmt = (mo: number, yr: number) =>
+          `${getThaiMonthShort(mo)} ${String(toBuddhistYear(yr)).slice(-2)}`;
+        return `ไตรมาสที่ ${selectedQuarter.slice(1)} (${fmt(
+          q.startMonth,
+          q.startYear,
+        )} - ${fmt(q.endMonth, q.endYear)})`;
+      }
+    }
+    return "ทุกเดือน";
+  }, [filters.เดือน, selectedQuarter]);
+
   /* ─── revenue breakdown (แผนรายรับ by หมวด) ───── */
 
   const revenueRows = useMemo<RevenueBreakdownRow[]>(() => {
@@ -568,10 +598,10 @@ export default function Dashboard() {
         />
 
         {/* ── Revenue breakdown (แผนรายรับ) ── */}
-        <RevenueBreakdown rows={revenueRows} />
+        <RevenueBreakdown rows={revenueRows} label={periodLabel} />
 
         {/* ── Expense breakdown (แผนรายจ่าย) ── */}
-        <ExpenseBreakdown rows={expenseRows} />
+        <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
 
         {/* ── Charts ─────────────────────── */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
