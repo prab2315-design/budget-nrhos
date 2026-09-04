@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { QuarterFilter, QUARTER_RANGES } from "@/components/QuarterFilter";
 import { SummaryCards } from "@/components/SummaryCards";
-import { LineChartComparison } from "@/components/LineChartComparison";
 import { BarChartVertical } from "@/components/BarChartVertical";
 import { PlanActualComparison } from "@/components/PlanActualComparison";
 import { RevenueBreakdown, type RevenueBreakdownRow } from "@/components/RevenueBreakdown";
@@ -302,44 +301,6 @@ export default function Dashboard() {
 
   /* ─── chart data (aggregated) ───────────────────── */
 
-  const lineChartData = useMemo(() => {
-    const monthMap = new Map<
-      string,
-      { inc: number; exp: number }
-    >();
-    for (const r of filteredData) {
-      const { month, year } = parseMonthYear(r.เดือน);
-      if (!month) continue;
-      const key = monthYearKey(year, month);
-      const entry = monthMap.get(key) ?? { inc: 0, exp: 0 };
-      if (r.ประเภท === "รายรับ") entry.inc += r.ยอดจริง;
-      else entry.exp += r.ยอดจริง;
-      monthMap.set(key, entry);
-    }
-
-    // Plan totals – sum every row in the group sheet (see summary comment)
-    let totalPlanInc = 0;
-    let totalPlanExp = 0;
-    for (const r of data?.group ?? []) {
-      totalPlanInc += r.แผนรายรับ;
-      totalPlanExp += r.แผนรายจ่าย;
-    }
-    const nMonths = monthMap.size || 1;
-
-    return [...monthMap.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, v]) => {
-        const [y, m] = key.split("-").map(Number);
-        return {
-          month: `${getThaiMonthShort(m)} ${String(toBuddhistYear(y)).slice(-2)}`,
-          แผนรายรับ: Math.round(totalPlanInc / nMonths),
-          แผนรายจ่าย: Math.round(totalPlanExp / nMonths),
-          รายรับจริง: v.inc,
-          รายจ่ายจริง: v.exp,
-        };
-      });
-  }, [filteredData, data]);
-
   const barChartData = useMemo(() => {
     const monthMap = new Map<string, { inc: number; exp: number }>();
     for (const r of filteredData) {
@@ -606,10 +567,6 @@ export default function Dashboard() {
           <BarChartVertical
             data={barChartData}
             title="แผน/ผล รายรับจริง – แผน/ผล รายจ่ายจริง จำแนกตามเดือน"
-          />
-          <LineChartComparison
-            data={lineChartData}
-            title="เปรียบเทียบแผนกับยอดจริง จำแนกตามเดือน"
           />
         </div>
 
