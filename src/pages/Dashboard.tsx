@@ -557,7 +557,7 @@ export default function Dashboard() {
         />
 
         {/* ── Comparison charts row (สะสม + รายเดือน) ── */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <PlanActualComparison
             planIncome={planIncome}
             planExpense={planExpense}
