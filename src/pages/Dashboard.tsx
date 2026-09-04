@@ -317,14 +317,10 @@ export default function Dashboard() {
       monthMap.set(key, entry);
     }
 
-    // Plan totals
-    const planDeduped = new Map<string, { แผนรายรับ: number; แผนรายจ่าย: number }>();
-    for (const r of data?.group ?? []) {
-      if (!planDeduped.has(r.รหัสบัญชี)) planDeduped.set(r.รหัสบัญชี, r);
-    }
+    // Plan totals – sum every row in the group sheet (see summary comment)
     let totalPlanInc = 0;
     let totalPlanExp = 0;
-    for (const r of planDeduped.values()) {
+    for (const r of data?.group ?? []) {
       totalPlanInc += r.แผนรายรับ;
       totalPlanExp += r.แผนรายจ่าย;
     }
@@ -355,17 +351,29 @@ export default function Dashboard() {
       else entry.exp += r.ยอดจริง;
       monthMap.set(key, entry);
     }
+
+    // Plan per month: annual budget spread evenly over the months in view
+    let totalPlanInc = 0;
+    let totalPlanExp = 0;
+    for (const r of data?.group ?? []) {
+      totalPlanInc += r.แผนรายรับ;
+      totalPlanExp += r.แผนรายจ่าย;
+    }
+    const nMonths = monthMap.size || 1;
+
     return [...monthMap.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, v]) => {
         const [y, m] = key.split("-").map(Number);
         return {
           name: `${getThaiMonthShort(m)} ${String(toBuddhistYear(y)).slice(-2)}`,
-          รายรับ: v.inc,
-          รายจ่าย: v.exp,
+          แผนรายรับ: Math.round(totalPlanInc / nMonths),
+          แผนรายจ่าย: Math.round(totalPlanExp / nMonths),
+          ผลรายรับจริง: v.inc,
+          ผลรายจ่ายจริง: v.exp,
         };
       });
-  }, [filteredData]);
+  }, [filteredData, data]);
 
   /* ─── table data ────────────────────────────────── */
 
@@ -597,7 +605,7 @@ export default function Dashboard() {
           />
           <BarChartVertical
             data={barChartData}
-            title="รายรับ–รายจ่ายจริง จำแนกตามเดือน"
+            title="แผน/ผล รายรับจริง – แผน/ผล รายจ่ายจริง จำแนกตามเดือน"
           />
           <LineChartComparison
             data={lineChartData}
