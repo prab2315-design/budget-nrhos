@@ -62,6 +62,7 @@ const FILTER_COLS = [
 
 // Columns whose filter options are scoped by the selected ประเภท (รายรับ/รายจ่าย)
 const TYPE_SCOPED_COLS = ["หมวด", "รายการบัญชี"];
+// รหัสบัญชี options are scoped by the selected หมวด (cascade: ประเภท → หมวด → รหัสบัญชี)
 
 // Fiscal-year boundaries (ปีงบประมาณ 2569: ต.ค. 2568 – ก.ย. 2569), derived from quarter ranges
 const FY_START = QUARTER_RANGES.Q1;
@@ -152,17 +153,23 @@ export default function Dashboard() {
   }, [data, filters, selectedQuarter]);
 
   // Unique options per filter column.
-  // หมวด and รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย).
+  // หมวด and รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย),
+  // and รหัสบัญชี options are scoped to the selected หมวด.
   const filterOptions = useMemo(() => {
     if (!data) return {} as Record<string, string[]>;
     const opts: Record<string, string[]> = {};
     const typeSel = filters["ประเภท"] ?? [];
+    const catSel = filters["หมวด"] ?? [];
     for (const col of FILTER_COLS) {
       const seen = new Set<string>();
       for (const r of data.trplan) {
         if (TYPE_SCOPED_COLS.includes(col.key) && typeSel.length > 0) {
           const t = String(r.ประเภท ?? "").trim();
           if (!typeSel.includes(t)) continue;
+        }
+        if (col.key === "รหัสบัญชี" && catSel.length > 0) {
+          const c = String(r.หมวด ?? "").trim();
+          if (!catSel.includes(c)) continue;
         }
         const v = String((r as unknown as Record<string, unknown>)[col.key] ?? "").trim();
         if (v && !seen.has(v)) {
@@ -174,23 +181,37 @@ export default function Dashboard() {
     return opts;
   }, [data, filters]);
 
-  // Drop หมวด / รายการบัญชี selections that no longer match the selected ประเภท
+  // Drop selections that no longer match their parent scope:
+  // หมวด / รายการบัญชี follow ประเภท, and รหัสบัญชี follows หมวด.
   useEffect(() => {
+    if (!data) return;
     const typeSel = filters["ประเภท"] ?? [];
-    if (!data || typeSel.length === 0) return;
-    const typeRows = data.trplan.filter((r) =>
-      typeSel.includes(String(r.ประเภท ?? "").trim()),
-    );
-    const validByCol: Record<string, Set<string>> = {
-      หมวด: new Set(typeRows.map((r) => String(r.หมวด ?? "").trim())),
-      รายการบัญชี: new Set(typeRows.map((r) => String(r.รายการบัญชี ?? "").trim())),
-    };
+    const catSel = filters["หมวด"] ?? [];
+    if (typeSel.length === 0 && catSel.length === 0) return;
+
+    const validByCol: Record<string, Set<string>> = {};
+    if (typeSel.length > 0) {
+      const typeRows = data.trplan.filter((r) =>
+        typeSel.includes(String(r.ประเภท ?? "").trim()),
+      );
+      validByCol["หมวด"] = new Set(typeRows.map((r) => String(r.หมวด ?? "").trim()));
+      validByCol["รายการบัญชี"] = new Set(typeRows.map((r) => String(r.รายการบัญชี ?? "").trim()));
+    }
+    if (catSel.length > 0) {
+      const catRows = data.trplan.filter((r) =>
+        catSel.includes(String(r.หมวด ?? "").trim()),
+      );
+      validByCol["รหัสบัญชี"] = new Set(catRows.map((r) => String(r.รหัสบัญชี ?? "").trim()));
+    }
+
     setFilters((prev) => {
       let changed = false;
       const next = { ...prev };
-      for (const col of TYPE_SCOPED_COLS) {
+      for (const col of [...TYPE_SCOPED_COLS, "รหัสบัญชี"]) {
+        const valid = validByCol[col];
+        if (!valid) continue;
         const cur = prev[col] ?? [];
-        const pruned = cur.filter((v) => validByCol[col]?.has(v));
+        const pruned = cur.filter((v) => valid.has(v));
         if (pruned.length !== cur.length) {
           next[col] = pruned;
           changed = true;
@@ -198,7 +219,7 @@ export default function Dashboard() {
       }
       return changed ? next : prev;
     });
-  }, [data, filters["ประเภท"]]);
+  }, [data, filters["ประเภท"], filters["หมวด"]]);
 
   /* ─── summary metrics ───────────────────────────── */
 
