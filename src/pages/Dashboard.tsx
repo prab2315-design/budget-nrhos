@@ -437,8 +437,9 @@ export default function Dashboard() {
       const cat = String(r.หมวด ?? "").trim();
       const code = String(r.รหัสบัญชี ?? "").trim();
       const item = String(r.รายการบัญชี ?? "").trim();
-      if (!cat && !code && !item) continue;
-      const key = `${cat}||${code}||${item}`;
+      if (!code && !item) continue;
+      // One row per รหัสบัญชี + รายการบัญชี so all months land in the same row
+      const key = `${code}||${item}`;
       let row = rowMap.get(key);
       if (!row) {
         row = {
