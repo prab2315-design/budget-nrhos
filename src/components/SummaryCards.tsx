@@ -24,6 +24,8 @@ export function SummaryCards({
       color: "text-emerald-700",
       bgColor: "bg-emerald-500/15",
       accentColor: "bg-emerald-600",
+      num: "1ก",
+      numClass: "section-num--green",
     },
     {
       title: "แผนรายจ่าย",
@@ -33,6 +35,8 @@ export function SummaryCards({
       color: "text-orange-600",
       bgColor: "bg-orange-500/15",
       accentColor: "bg-orange-500",
+      num: "1ข",
+      numClass: "section-num--orange",
     },
     {
       title: "รายรับสะสม",
@@ -42,6 +46,8 @@ export function SummaryCards({
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
       accentColor: "bg-emerald-400",
+      num: "1ค",
+      numClass: "section-num--green",
     },
     {
       title: "รายจ่ายสะสม",
@@ -51,6 +57,8 @@ export function SummaryCards({
       color: "text-orange-400",
       bgColor: "bg-orange-500/10",
       accentColor: "bg-orange-400",
+      num: "1ง",
+      numClass: "section-num--orange",
     },
   ];
 
@@ -68,13 +76,18 @@ export function SummaryCards({
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {card.title}
-                </p>
-                <p className="mt-1 text-[10px] font-medium text-muted-foreground/60">
+                <div className="flex items-center gap-2">
+                  <span className={cn("section-num", card.numClass)}>
+                    {card.num}
+                  </span>
+                  <p className="text-sm font-bold tracking-tight text-foreground">
+                    {card.title}
+                  </p>
+                </div>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   {card.subtitle}
                 </p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
                   {formatCurrencyFull(card.value)}
                 </p>
               </div>

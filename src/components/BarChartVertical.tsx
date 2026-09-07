@@ -149,6 +149,7 @@ export function BarChartVertical({
   return (
     <div className="glass-card p-5">
       <div className="mb-2 flex items-start gap-2">
+        <span className="section-num section-num--blue">2ข</span>
         <h3 className="text-base font-bold leading-snug tracking-tight text-foreground">
           {title}
         </h3>

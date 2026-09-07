@@ -129,9 +129,12 @@ export function PlanActualComparison({
 
   return (
     <div className="glass-card p-5">
-      <h3 className="mb-4 text-base font-bold tracking-tight text-foreground">
-        เปรียบเทียบแผนกับยอดจริงสะสม
-      </h3>
+      <div className="mb-4 flex items-center gap-2">
+        <span className="section-num section-num--blue">2ก</span>
+        <h3 className="text-base font-bold tracking-tight text-foreground">
+          เปรียบเทียบแผนกับยอดจริงสะสม
+        </h3>
+      </div>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart

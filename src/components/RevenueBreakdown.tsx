@@ -37,12 +37,13 @@ export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
     <div className="glass-card p-5">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
+        <span className="section-num section-num--green">2ก</span>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
           <Banknote className="size-4 text-emerald-600" />
         </span>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">แผนรายรับ</h2>
-          <p className="text-[11px] text-muted-foreground">
+          <h2 className="text-base font-bold tracking-tight text-foreground">แผนรายรับ</h2>
+          <p className="text-xs text-muted-foreground">
             เปรียบเทียบแผนกับผลจริง จำแนกตามหมวดรายรับ
           </p>
         </div>
@@ -56,7 +57,7 @@ export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-black/10">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-black/10 bg-black/5">
               <th

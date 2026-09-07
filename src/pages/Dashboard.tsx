@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { RefreshCw, FileDown, Search } from "lucide-react";
+import { RefreshCw, FileDown, Search, Landmark } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -21,6 +21,7 @@ import { BarChartVertical } from "@/components/BarChartVertical";
 import { PlanActualComparison } from "@/components/PlanActualComparison";
 import { RevenueBreakdown, type RevenueBreakdownRow } from "@/components/RevenueBreakdown";
 import { ExpenseBreakdown, type ExpenseBreakdownRow } from "@/components/ExpenseBreakdown";
+import { MophEmblem } from "@/components/MophEmblem";
 
 // Logo URL for PDF export header
 const LOGO_URL =
@@ -628,53 +629,60 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1440px] space-y-6">
-        {/* ── Header ─────────────────────── */}
-        <div className="glass-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <img
-              src={LOGO_URL}
-              alt="Logo"
-              className="size-12 rounded-lg object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground">
-                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                แดชบอร์ดวิเคราะห์งบประมาณ ณ ปัจจุบัน
-              </p>
+        {/* ── Hero header ────────────────── */}
+        <header className="relative overflow-hidden rounded-2xl border border-black/[0.08] bg-white/75 shadow-[0_4px_24px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+          {/* Soft color washes */}
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-24 -top-24 size-72 rounded-full bg-emerald-300/25 blur-3xl" />
+            <div className="absolute -right-24 -top-20 size-72 rounded-full bg-amber-300/25 blur-3xl" />
+          </div>
+
+          <div className="relative flex flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <MophEmblem className="size-16 shrink-0 drop-shadow-sm sm:size-20" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Landmark className="size-4 text-emerald-600" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                    กระทรวงสาธารณสุข
+                  </p>
+                </div>
+                <h1 className="mt-1 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
+                  แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
+                </h1>
+                <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+                  ปีงบประมาณ พ.ศ. 2569 · แดชบอร์ดวิเคราะห์งบประมาณแบบเรียลไทม์
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* LIVE indicator */}
+              <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-xs font-medium text-emerald-600">LIVE</span>
+              </div>
+              {/* Sync button */}
+              <button
+                type="button"
+                onClick={fetchData}
+                disabled={syncing}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl border border-black/10 bg-black/5 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
+                  "hover:bg-black/10 hover:shadow-md",
+                  "disabled:opacity-50",
+                )}
+              >
+                <RefreshCw
+                  className={cn("size-4", syncing && "animate-spin")}
+                />
+                ซิงก์ใหม่
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {/* LIVE indicator */}
-            <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-              </span>
-              <span className="text-xs font-medium text-emerald-600">LIVE</span>
-            </div>
-            {/* Sync button */}
-            <button
-              type="button"
-              onClick={fetchData}
-              disabled={syncing}
-              className={cn(
-                "flex items-center gap-2 rounded-xl border border-black/10 bg-black/5 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all",
-                "hover:bg-black/10 hover:shadow-md",
-                "disabled:opacity-50",
-              )}
-            >
-              <RefreshCw
-                className={cn("size-4", syncing && "animate-spin")}
-              />
-              ซิงก์ใหม่
-            </button>
-          </div>
-        </div>
+        </header>
 
         {/* ── Summary Cards ──────────────── */}
         <SummaryCards
@@ -702,16 +710,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Revenue breakdown (แผนรายรับ) ── */}
-        <RevenueBreakdown rows={revenueRows} label={periodLabel} />
-
-        {/* ── Expense breakdown (แผนรายจ่าย) ── */}
-        <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
+        {/* ── Revenue + Expense breakdowns side by side ── */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <RevenueBreakdown rows={revenueRows} label={periodLabel} />
+          <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
+        </div>
 
         {/* ── Filters ────────────────────── */}
         <div className="glass-card relative z-10 p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Search className="size-5 text-muted-foreground" />
+            <span className="section-num section-num--slate">4</span>
             <h2 className="text-lg font-bold tracking-tight text-foreground">
               กรองข้อมูล
             </h2>
@@ -750,9 +758,12 @@ export default function Dashboard() {
         {/* ── Data Table ─────────────────── */}
         <div className="glass-card p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-sm font-semibold text-foreground">
-              บันทึกรายการ ({pivotView.length} รายการ)
-            </h2>
+            <div className="flex items-center gap-2">
+              <span className="section-num section-num--slate">5</span>
+              <h2 className="text-lg font-bold tracking-tight text-foreground">
+                บันทึกรายการ ({pivotView.length} รายการ)
+              </h2>
+            </div>
             <div className="flex items-center gap-3">
               {/* Table search */}
               <div className="glass-input flex items-center gap-2 px-3 py-1.5">
@@ -960,9 +971,15 @@ export default function Dashboard() {
         </div>
 
         {/* ── Footer ─────────────────────── */}
-        <div className="pb-4 text-center text-xs text-muted-foreground/60">
-          อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
-        </div>
+        <footer className="pb-4">
+          <div className="mb-3 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
+            <MophEmblem className="size-5 shrink-0" />
+            <span>
+              อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
+            </span>
+          </div>
+        </footer>
       </div>
     </main>
   );
