@@ -30,7 +30,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass-card p-3 text-xs shadow-lg">
+    <div className="glass-card p-3 text-sm shadow-lg">
       <p className="mb-2 font-semibold text-foreground">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 py-0.5">
@@ -60,12 +60,12 @@ function DiffChip({
     return (
       <div className="glass-card-subtle flex items-center justify-between px-4 py-3">
         <div>
-          <p className="text-[11px] font-medium text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             ส่วนต่าง{isIncome ? "รายรับ" : "รายจ่าย"}
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-foreground">—</p>
+          <p className="mt-0.5 text-base font-semibold text-foreground">—</p>
         </div>
-        <span className="rounded-full bg-black/5 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+        <span className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-muted-foreground">
           ไม่มีข้อมูลแผน
         </span>
       </div>
@@ -85,7 +85,7 @@ function DiffChip({
         </p>
         <p
           className={cn(
-            "mt-0.5 text-sm font-semibold",
+            "mt-0.5 text-base font-semibold",
             good ? "text-emerald-600" : "text-orange-600",
           )}
         >
@@ -95,7 +95,7 @@ function DiffChip({
       </div>
       <span
         className={cn(
-          "rounded-full px-2.5 py-1 text-[10px] font-medium",
+          "rounded-full px-2.5 py-1 text-xs font-medium",
           good
             ? "bg-emerald-500/15 text-emerald-700"
             : "bg-orange-500/15 text-orange-700",
@@ -129,7 +129,7 @@ export function PlanActualComparison({
 
   return (
     <div className="glass-card p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">
+      <h3 className="mb-4 text-base font-bold tracking-tight text-foreground">
         เปรียบเทียบแผนกับยอดจริงสะสม
       </h3>
       <div className="h-[300px]">
@@ -146,17 +146,17 @@ export function PlanActualComparison({
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
+              tick={{ fontSize: 12, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
               interval={0}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
+              tick={{ fontSize: 12, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
-              width={80}
+              width={90}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={72}>
@@ -169,7 +169,7 @@ export function PlanActualComparison({
                 formatter={(value: number | string) =>
                   formatCurrency(Number(value))
                 }
-                style={{ fontSize: 11, fill: "rgba(15,23,42,0.8)" }}
+                style={{ fontSize: 12, fill: "rgba(15,23,42,0.8)" }}
               />
             </Bar>
           </BarChart>

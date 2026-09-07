@@ -56,7 +56,7 @@ const CustomTooltip = ({
   const over = exp > inc;
 
   return (
-    <div className="glass-card min-w-[230px] p-3 text-xs shadow-lg">
+    <div className="glass-card min-w-[230px] p-3 text-sm shadow-lg">
       <p className="mb-2 font-semibold text-foreground">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 py-0.5">
@@ -114,14 +114,14 @@ function AlertAxisTick({
         y={0}
         dy={12}
         textAnchor="middle"
-        fontSize={11}
+        fontSize={12}
         fontWeight={isAlert ? 700 : 400}
         fill={isAlert ? "#dc2626" : "rgba(15,23,42,0.55)"}
       >
         {payload.value}
       </text>
       {isAlert && (
-        <text x={0} y={-4} textAnchor="middle" fontSize={9} fill="#dc2626">
+        <text x={0} y={-4} textAnchor="middle" fontSize={10} fill="#dc2626">
           ▲
         </text>
       )}
@@ -146,11 +146,11 @@ export function BarChartVertical({
   return (
     <div className="glass-card p-5">
       <div className="mb-2 flex items-start gap-2">
-        <h3 className="text-sm font-semibold leading-snug text-foreground">
+        <h3 className="text-base font-bold leading-snug tracking-tight text-foreground">
           {title}
         </h3>
         <span
-          className={`ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+          className={`ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
             totalOver
               ? "border-red-500/30 bg-red-500/10 text-red-700"
               : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
@@ -163,7 +163,7 @@ export function BarChartVertical({
       {alertMonths.size > 0 && (
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-red-600" />
-          <p className="text-[11px] leading-snug text-red-700">
+          <p className="text-xs leading-snug text-red-700">
             <span className="font-bold">เดือนที่มีรายจ่ายสูงกว่ารายรับ:</span>{" "}
             {data.filter(hasAlert).map((d) => d.name).join(", ")}
           </p>
@@ -192,16 +192,16 @@ export function BarChartVertical({
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
-              tick={{ fontSize: 11, fill: "rgba(15,23,42,0.55)" }}
+              tick={{ fontSize: 12, fill: "rgba(15,23,42,0.55)" }}
               tickLine={false}
               axisLine={false}
-              width={80}
+              width={90}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend
               iconType="circle"
               iconSize={8}
-              wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+              wrapperStyle={{ fontSize: 13, paddingTop: 8 }}
             />
             <Bar
               dataKey="แผนรายรับ"

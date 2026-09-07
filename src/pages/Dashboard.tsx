@@ -648,17 +648,21 @@ export default function Dashboard() {
         />
 
         {/* ── Comparison charts row (สะสม + รายเดือน) ── */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <PlanActualComparison
-            planIncome={planIncome}
-            planExpense={planExpense}
-            actualIncome={actualIncome}
-            actualExpense={actualExpense}
-          />
-          <BarChartVertical
-            data={barChartData}
-            title="แผน/ผล รายรับจริง – แผน/ผล รายจ่ายจริง จำแนกตามเดือน"
-          />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+          <div className="xl:col-span-2">
+            <PlanActualComparison
+              planIncome={planIncome}
+              planExpense={planExpense}
+              actualIncome={actualIncome}
+              actualExpense={actualExpense}
+            />
+          </div>
+          <div className="xl:col-span-3">
+            <BarChartVertical
+              data={barChartData}
+              title="แผน/ผล รายรับจริง – แผน/ผล รายจ่ายจริง จำแนกตามเดือน"
+            />
+          </div>
         </div>
 
         {/* ── Revenue breakdown (แผนรายรับ) ── */}
