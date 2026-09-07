@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { RefreshCw, FileDown, Search, Landmark } from "lucide-react";
+import { RefreshCw, FileDown, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -638,22 +638,10 @@ export default function Dashboard() {
           </div>
 
           <div className="relative flex flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-4">
-              <MophEmblem className="size-16 shrink-0 drop-shadow-sm sm:size-20" />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Landmark className="size-4 text-emerald-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                    กระทรวงสาธารณสุข
-                  </p>
-                </div>
-                <h1 className="mt-1 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
-                  แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง
-                </h1>
-                <p className="mt-0.5 text-sm font-medium text-muted-foreground">
-                  ปีงบประมาณ พ.ศ. 2569 · แดชบอร์ดวิเคราะห์งบประมาณแบบเรียลไทม์
-                </p>
-              </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
+                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
+              </h1>
             </div>
             <div className="flex items-center gap-3">
               {/* LIVE indicator */}
