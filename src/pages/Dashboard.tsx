@@ -52,11 +52,11 @@ function isInDateRange(
 /* ─── filter column definitions ────────────────────────────── */
 
 const FILTER_COLS = [
-  { key: "เดือน", label: "เดือน" },
-  { key: "รหัสบัญชี", label: "รหัสบัญชี" },
-  { key: "หมวด", label: "หมวด" },
-  { key: "รายการบัญชี", label: "รายการบัญชี" },
   { key: "ประเภท", label: "ประเภท" },
+  { key: "เดือน", label: "รายเดือน" },
+  { key: "หมวด", label: "หมวด" },
+  { key: "รหัสบัญชี", label: "รหัสบัญชี" },
+  { key: "รายการบัญชี", label: "รายการบัญชี" },
 ] as const;
 
 /* ─── pivot table row (บันทึกรายการ shown as a month matrix) ── */
@@ -142,13 +142,19 @@ export default function Dashboard() {
     return rows;
   }, [data, filters, selectedQuarter]);
 
-  // Unique options per filter column
+  // Unique options per filter column.
+  // รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย).
   const filterOptions = useMemo(() => {
     if (!data) return {} as Record<string, string[]>;
     const opts: Record<string, string[]> = {};
+    const typeSel = filters["ประเภท"] ?? [];
     for (const col of FILTER_COLS) {
       const seen = new Set<string>();
       for (const r of data.trplan) {
+        if (col.key === "รายการบัญชี" && typeSel.length > 0) {
+          const t = String(r.ประเภท ?? "").trim();
+          if (!typeSel.includes(t)) continue;
+        }
         const v = String((r as unknown as Record<string, unknown>)[col.key] ?? "").trim();
         if (v && !seen.has(v)) {
           seen.add(v);
@@ -157,7 +163,23 @@ export default function Dashboard() {
       }
     }
     return opts;
-  }, [data]);
+  }, [data, filters]);
+
+  // Drop รายการบัญชี selections that no longer match the selected ประเภท
+  useEffect(() => {
+    const typeSel = filters["ประเภท"] ?? [];
+    if (!data || typeSel.length === 0) return;
+    const valid = new Set(
+      data.trplan
+        .filter((r) => typeSel.includes(String(r.ประเภท ?? "").trim()))
+        .map((r) => String(r.รายการบัญชี ?? "").trim()),
+    );
+    setFilters((prev) => {
+      const cur = prev["รายการบัญชี"] ?? [];
+      const next = cur.filter((v) => valid.has(v));
+      return next.length === cur.length ? prev : { ...prev, "รายการบัญชี": next };
+    });
+  }, [data, filters["ประเภท"]]);
 
   /* ─── summary metrics ───────────────────────────── */
 
@@ -635,11 +657,14 @@ export default function Dashboard() {
         {/* ── Filters ────────────────────── */}
         <div className="glass-card relative z-10 p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Search className="size-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">กรองข้อมูล</h2>
+            <Search className="size-5 text-muted-foreground" />
+            <h2 className="text-lg font-bold tracking-tight text-foreground">
+              กรองข้อมูล
+            </h2>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-            {FILTER_COLS.map((col) => (
+          {/* Order: ประเภท → รายไตรมาส → รายเดือน → หมวด → รหัสบัญชี → รายการบัญชี */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {FILTER_COLS.slice(0, 1).map((col) => (
               <MultiSelectFilter
                 key={col.key}
                 label={col.label}
@@ -654,6 +679,17 @@ export default function Dashboard() {
               selected={selectedQuarter}
               onChange={setSelectedQuarter}
             />
+            {FILTER_COLS.slice(1).map((col) => (
+              <MultiSelectFilter
+                key={col.key}
+                label={col.label}
+                options={filterOptions[col.key] ?? []}
+                selected={filters[col.key] ?? []}
+                onChange={(sel) =>
+                  setFilters((prev) => ({ ...prev, [col.key]: sel }))
+                }
+              />
+            ))}
           </div>
         </div>
 

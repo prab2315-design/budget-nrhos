@@ -58,7 +58,7 @@ export function MultiSelectFilter({
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
       <button
