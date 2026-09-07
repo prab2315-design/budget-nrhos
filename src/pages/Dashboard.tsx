@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  RefreshCw,
-  FileDown,
-  Search,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { RefreshCw, FileDown, Search } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -66,6 +59,16 @@ const FILTER_COLS = [
   { key: "ประเภท", label: "ประเภท" },
 ] as const;
 
+/* ─── pivot table row (บันทึกรายการ shown as a month matrix) ── */
+
+interface PivotRow {
+  หมวด: string;
+  รหัสบัญชี: string;
+  รายการบัญชี: string;
+  ประเภท: string;
+  values: Map<string, number>; // monthYearKey -> sum of ยอดจริง
+}
+
 /* ─── component ────────────────────────────────────────────── */
 
 export default function Dashboard() {
@@ -85,10 +88,9 @@ export default function Dashboard() {
   // Quarter filter (default: all quarters)
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
 
-  // Table search, sorting & pagination
+  // Table search & pagination
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(0);
-  const [sortConfig, setSortConfig] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const PAGE_SIZE = 20;
 
   /* ─── data fetching ─────────────────────────────── */
@@ -336,38 +338,92 @@ export default function Dashboard() {
       });
   }, [filteredData, data]);
 
-  /* ─── table data ────────────────────────────────── */
+  /* ─── pivot table (rows: หมวด×รหัสบัญชี, columns: เดือน) ── */
 
-  const tableData = useMemo(() => {
-    let rows = filteredData.filter((r) => r.ยอดจริง !== 0);
-    if (tableSearch.trim()) {
-      const q = tableSearch.toLowerCase();
-      rows = rows.filter((r) =>
-        Object.values(r).some((v) => String(v).toLowerCase().includes(q)),
-      );
+  const pivotMonths = useMemo(() => {
+    const seen = new Set<string>();
+    const months: { key: string; label: string }[] = [];
+    for (const r of filteredData) {
+      const { month, year } = parseMonthYear(r.เดือน);
+      if (!month) continue;
+      const key = monthYearKey(year, month);
+      if (!seen.has(key)) {
+        seen.add(key);
+        months.push({
+          key,
+          label: `${getThaiMonthShort(month)} ${String(toBuddhistYear(year)).slice(-2)}`,
+        });
+      }
     }
+    return months.sort((a, b) => a.key.localeCompare(b.key));
+  }, [filteredData]);
 
-    if (sortConfig) {
-      const { key, dir } = sortConfig;
-      const mult = dir === "asc" ? 1 : -1;
-      rows.sort((a, b) => {
-        const av = (a as unknown as Record<string, unknown>)[key] ?? "";
-        const bv = (b as unknown as Record<string, unknown>)[key] ?? "";
-        if (key === "ยอดจริง") {
-          return ((av as number) - (bv as number)) * mult;
-        }
-        return String(av).localeCompare(String(bv), "th") * mult;
-      });
+  const pivotRows = useMemo<PivotRow[]>(() => {
+    const rowMap = new Map<string, PivotRow>();
+    for (const r of filteredData) {
+      const cat = String(r.หมวด ?? "").trim();
+      const code = String(r.รหัสบัญชี ?? "").trim();
+      const item = String(r.รายการบัญชี ?? "").trim();
+      if (!cat && !code && !item) continue;
+      const key = `${cat}||${code}||${item}`;
+      let row = rowMap.get(key);
+      if (!row) {
+        row = {
+          หมวด: cat,
+          รหัสบัญชี: code,
+          รายการบัญชี: item,
+          ประเภท: String(r.ประเภท ?? "").trim(),
+          values: new Map(),
+        };
+        rowMap.set(key, row);
+      }
+      const { month, year } = parseMonthYear(r.เดือน);
+      if (!month) continue;
+      const mk = monthYearKey(year, month);
+      row.values.set(mk, (row.values.get(mk) ?? 0) + r.ยอดจริง);
     }
-    return rows;
-  }, [filteredData, tableSearch, sortConfig]);
+    const rows = [...rowMap.values()];
+    // Group order: numeric prefix of หมวด (1., 2., …), then first-appearance order
+    const catOrder = new Map<string, number>();
+    for (const row of rows) {
+      if (!catOrder.has(row.หมวด)) catOrder.set(row.หมวด, catOrder.size);
+    }
+    return rows.sort((a, b) => {
+      const na = parseInt(a.หมวด.match(/^(\d+)/)?.[1] ?? "999", 10);
+      const nb = parseInt(b.หมวด.match(/^(\d+)/)?.[1] ?? "999", 10);
+      if (na !== nb) return na - nb;
+      return (catOrder.get(a.หมวด) ?? 0) - (catOrder.get(b.หมวด) ?? 0);
+    });
+  }, [filteredData]);
 
-  const tableTotalPages = Math.max(1, Math.ceil(tableData.length / PAGE_SIZE));
+  const pivotView = useMemo(() => {
+    if (!tableSearch.trim()) return pivotRows;
+    const q = tableSearch.toLowerCase();
+    return pivotRows.filter((r) =>
+      [r.หมวด, r.รหัสบัญชี, r.รายการบัญชี].some((v) =>
+        v.toLowerCase().includes(q),
+      ),
+    );
+  }, [pivotRows, tableSearch]);
+
+  const tableTotalPages = Math.max(1, Math.ceil(pivotView.length / PAGE_SIZE));
   const safePage = Math.min(tablePage, tableTotalPages - 1);
-  const pagedData = useMemo(
-    () => tableData.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE),
-    [tableData, safePage],
+  const pagedPivotRows = useMemo(
+    () =>
+      pivotView.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE),
+    [pivotView, safePage],
   );
+
+  // Group the current page's rows by หมวด for a merged category cell
+  const pageGroups = useMemo(() => {
+    const groups: { cat: string; rows: PivotRow[] }[] = [];
+    for (const r of pagedPivotRows) {
+      const last = groups[groups.length - 1];
+      if (last && last.cat === r.หมวด) last.rows.push(r);
+      else groups.push({ cat: r.หมวด, rows: [r] });
+    }
+    return groups;
+  }, [pagedPivotRows]);
 
   // Reset to first page when data or search changes
   useEffect(() => {
@@ -605,7 +661,7 @@ export default function Dashboard() {
         <div className="glass-card p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-sm font-semibold text-foreground">
-              บันทึกรายการ ({tableData.length} รายการ)
+              บันทึกรายการ ({pivotView.length} รายการ)
             </h2>
             <div className="flex items-center gap-3">
               {/* Table search */}
@@ -642,108 +698,121 @@ export default function Dashboard() {
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-black/10">
-            <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+            <table
+              className="w-full table-fixed text-left text-sm"
+              style={{ minWidth: 660 + pivotMonths.length * 92 }}
+            >
+              <colgroup>
+                <col style={{ width: 240 }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 300 }} />
+                {pivotMonths.map((m) => (
+                  <col key={m.key} style={{ width: 92 }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
-                  {([
-                    { key: "เดือน", label: "เดือน", width: "w-[15%]" },
-                    { key: "รหัสบัญชี", label: "รหัสบัญชี", width: "w-[11%]" },
-                    { key: "หมวด", label: "หมวด", width: "w-[22%]" },
-                    { key: "รายการบัญชี", label: "รายการบัญชี", width: "w-[28%]" },
-                    { key: "ยอดจริง", label: "ยอดจริง", width: "w-[14%]" },
-                    { key: "ประเภท", label: "ประเภท", width: "w-[10%]" },
-                  ]).map(({ key, label, width }) => {
-                    const isActive = sortConfig?.key === key;
-                    const dir = isActive ? sortConfig!.dir : null;
-                    return (
-                      <th
-                        key={key}
-                        onClick={() =>
-                          setSortConfig((prev) => {
-                            if (prev?.key === key) {
-                              return prev.dir === "asc"
-                                ? { key, dir: "desc" }
-                                : null;
-                            }
-                            return { key, dir: "asc" };
-                          })
-                        }
-                        className={cn(
-                          "group overflow-hidden whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold select-none transition-colors",
-                          width,
-                          isActive ? "text-primary" : "text-muted-foreground cursor-pointer hover:text-foreground",
-                        )}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          {label}
-                          <span className="inline-flex size-3.5 items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                            {!isActive && <ArrowUpDown className="size-3" />}
-                          </span>
-                          {isActive && (
-                            dir === "asc"
-                              ? <ArrowUp className="size-3" />
-                              : <ArrowDown className="size-3" />
-                          )}
-                        </span>
-                      </th>
-                    );
-                  })}
+                  <th
+                    rowSpan={2}
+                    className="px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                  >
+                    หมวด
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                  >
+                    รหัสบัญชี
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="border-r border-black/10 px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                  >
+                    รายการบัญชี
+                  </th>
+                  {pivotMonths.length > 0 && (
+                    <th
+                      colSpan={pivotMonths.length}
+                      className="border-b border-l border-black/10 px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground"
+                    >
+                      เดือน
+                    </th>
+                  )}
                 </tr>
+                {pivotMonths.length > 0 && (
+                  <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
+                    {pivotMonths.map((m) => (
+                      <th
+                        key={m.key}
+                        className="border-l border-black/5 px-2 py-2 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
+                      >
+                        {m.label}
+                      </th>
+                    ))}
+                  </tr>
+                )}
               </thead>
               <tbody>
-                {pagedData.length === 0 && (
+                {pagedPivotRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={3 + pivotMonths.length}
                       className="px-3 py-8 text-center text-sm text-muted-foreground"
                     >
                       ไม่พบข้อมูลที่ตรงกับตัวกรอง
                     </td>
                   </tr>
                 )}
-                {pagedData.map((r, i) => (
-                  <tr
-                    key={`${safePage}-${i}`}
-                    className="border-b border-black/5 transition-colors hover:bg-black/5"
-                  >
-                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
-                      {r.เดือน}
-                    </td>
-                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
-                      {r.รหัสบัญชี}
-                    </td>
-                    <td className="break-words px-3 py-2 text-xs">
-                      {r.หมวด}
-                    </td>
-                    <td className="break-words px-3 py-2 text-xs">
-                      {r.รายการบัญชี}
-                    </td>
-                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-right text-xs font-medium">
-                      {formatCurrencyFull(r.ยอดจริง)}
-                    </td>
-                    <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs">
-                      <span
-                        className={cn(
-                          "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium",
-                          r.ประเภท === "รายรับ"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-orange-100 text-orange-700",
-                        )}
-                      >
-                        {r.ประเภท}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {pageGroups.map((g, gi) =>
+                  g.rows.map((r, ri) => (
+                    <tr
+                      key={`${safePage}-${gi}-${ri}`}
+                      className="border-b border-black/5 transition-colors hover:bg-black/5"
+                    >
+                      {ri === 0 && (
+                        <td
+                          rowSpan={g.rows.length}
+                          className="break-words px-3 py-2 text-xs align-top text-foreground"
+                        >
+                          {g.cat}
+                        </td>
+                      )}
+                      <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs text-foreground">
+                        {r.รหัสบัญชี}
+                      </td>
+                      <td className="break-words border-r border-black/10 px-3 py-2 text-xs text-foreground">
+                        {r.รายการบัญชี}
+                      </td>
+                      {pivotMonths.map((m) => {
+                        const v = r.values.get(m.key) ?? 0;
+                        return (
+                          <td
+                            key={m.key}
+                            className={cn(
+                              "border-l border-black/5 px-2 py-2 text-right text-xs whitespace-nowrap",
+                              v === 0
+                                ? ""
+                                : r.ประเภท === "รายรับ"
+                                  ? "font-medium text-emerald-700"
+                                  : "font-medium text-orange-700",
+                            )}
+                          >
+                            {v !== 0 ? formatCurrencyFull(v) : ""}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )),
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          {tableData.length > PAGE_SIZE && (
+          {pivotView.length > PAGE_SIZE && (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                แสดง {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, tableData.length)} จาก {tableData.length} รายการ
+                แสดง {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, pivotView.length)} จาก {pivotView.length} รายการ
               </p>
               <div className="flex items-center gap-1.5">
                 <button
