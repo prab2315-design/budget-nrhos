@@ -59,6 +59,9 @@ const FILTER_COLS = [
   { key: "รายการบัญชี", label: "รายการบัญชี" },
 ] as const;
 
+// Columns whose filter options are scoped by the selected ประเภท (รายรับ/รายจ่าย)
+const TYPE_SCOPED_COLS = ["หมวด", "รายการบัญชี"];
+
 /* ─── pivot table row (บันทึกรายการ shown as a month matrix) ── */
 
 interface PivotRow {
@@ -143,7 +146,7 @@ export default function Dashboard() {
   }, [data, filters, selectedQuarter]);
 
   // Unique options per filter column.
-  // รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย).
+  // หมวด and รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย).
   const filterOptions = useMemo(() => {
     if (!data) return {} as Record<string, string[]>;
     const opts: Record<string, string[]> = {};
@@ -151,7 +154,7 @@ export default function Dashboard() {
     for (const col of FILTER_COLS) {
       const seen = new Set<string>();
       for (const r of data.trplan) {
-        if (col.key === "รายการบัญชี" && typeSel.length > 0) {
+        if (TYPE_SCOPED_COLS.includes(col.key) && typeSel.length > 0) {
           const t = String(r.ประเภท ?? "").trim();
           if (!typeSel.includes(t)) continue;
         }
@@ -165,19 +168,29 @@ export default function Dashboard() {
     return opts;
   }, [data, filters]);
 
-  // Drop รายการบัญชี selections that no longer match the selected ประเภท
+  // Drop หมวด / รายการบัญชี selections that no longer match the selected ประเภท
   useEffect(() => {
     const typeSel = filters["ประเภท"] ?? [];
     if (!data || typeSel.length === 0) return;
-    const valid = new Set(
-      data.trplan
-        .filter((r) => typeSel.includes(String(r.ประเภท ?? "").trim()))
-        .map((r) => String(r.รายการบัญชี ?? "").trim()),
+    const typeRows = data.trplan.filter((r) =>
+      typeSel.includes(String(r.ประเภท ?? "").trim()),
     );
+    const validByCol: Record<string, Set<string>> = {
+      หมวด: new Set(typeRows.map((r) => String(r.หมวด ?? "").trim())),
+      รายการบัญชี: new Set(typeRows.map((r) => String(r.รายการบัญชี ?? "").trim())),
+    };
     setFilters((prev) => {
-      const cur = prev["รายการบัญชี"] ?? [];
-      const next = cur.filter((v) => valid.has(v));
-      return next.length === cur.length ? prev : { ...prev, "รายการบัญชี": next };
+      let changed = false;
+      const next = { ...prev };
+      for (const col of TYPE_SCOPED_COLS) {
+        const cur = prev[col] ?? [];
+        const pruned = cur.filter((v) => validByCol[col]?.has(v));
+        if (pruned.length !== cur.length) {
+          next[col] = pruned;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
     });
   }, [data, filters["ประเภท"]]);
 
