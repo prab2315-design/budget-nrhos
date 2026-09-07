@@ -62,6 +62,11 @@ const FILTER_COLS = [
 // Columns whose filter options are scoped by the selected ประเภท (รายรับ/รายจ่าย)
 const TYPE_SCOPED_COLS = ["หมวด", "รายการบัญชี"];
 
+// Fiscal-year boundaries (ปีงบประมาณ 2569: ต.ค. 2568 – ก.ย. 2569), derived from quarter ranges
+const FY_START = QUARTER_RANGES.Q1;
+const FY_END = QUARTER_RANGES.Q4;
+const MONTHS_PER_FY = 12;
+
 /* ─── pivot table row (บันทึกรายการ shown as a month matrix) ── */
 
 interface PivotRow {
@@ -339,6 +344,7 @@ export default function Dashboard() {
   /* ─── chart data (aggregated) ───────────────────── */
 
   const barChartData = useMemo(() => {
+    // Actuals per month from filtered rows
     const monthMap = new Map<string, { inc: number; exp: number }>();
     for (const r of filteredData) {
       const { month, year } = parseMonthYear(r.เดือน);
@@ -350,28 +356,59 @@ export default function Dashboard() {
       monthMap.set(key, entry);
     }
 
-    // Plan per month: annual budget spread evenly over the months in view
+    // Determine the full month range to display so every month shows,
+    // including months without actual data
+    const keys = new Set<string>();
+    const addRange = (sm: number, sy: number, em: number, ey: number) => {
+      let y = sy;
+      let m = sm;
+      while (y < ey || (y === ey && m <= em)) {
+        keys.add(monthYearKey(y, m));
+        m += 1;
+        if (m > 12) {
+          m = 1;
+          y += 1;
+        }
+      }
+    };
+    if (selectedQuarter) {
+      const q = QUARTER_RANGES[selectedQuarter];
+      if (q) addRange(q.startMonth, q.startYear, q.endMonth, q.endYear);
+    } else if (filters.เดือน.length > 0) {
+      for (const m of filters.เดือน) {
+        const p = parseMonthYear(m);
+        if (p.month) keys.add(monthYearKey(p.year, p.month));
+      }
+    }
+    if (keys.size === 0) {
+      // No time filter (or unparseable): show the complete fiscal year
+      addRange(FY_START.startMonth, FY_START.startYear, FY_END.endMonth, FY_END.endYear);
+    }
+    // Keep any data months outside the default range too
+    for (const k of monthMap.keys()) keys.add(k);
+
+    // Plan per month: annual budget spread evenly over the fiscal year (12 months)
     let totalPlanInc = 0;
     let totalPlanExp = 0;
     for (const r of data?.group ?? []) {
       totalPlanInc += r.แผนรายรับ;
       totalPlanExp += r.แผนรายจ่าย;
     }
-    const nMonths = monthMap.size || 1;
 
-    return [...monthMap.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, v]) => {
+    return [...keys]
+      .sort((a, b) => a.localeCompare(b))
+      .map((key) => {
         const [y, m] = key.split("-").map(Number);
+        const v = monthMap.get(key) ?? { inc: 0, exp: 0 };
         return {
           name: `${getThaiMonthShort(m)} ${String(toBuddhistYear(y)).slice(-2)}`,
-          แผนรายรับ: Math.round(totalPlanInc / nMonths),
-          แผนรายจ่าย: Math.round(totalPlanExp / nMonths),
+          แผนรายรับ: Math.round(totalPlanInc / MONTHS_PER_FY),
+          แผนรายจ่าย: Math.round(totalPlanExp / MONTHS_PER_FY),
           ผลรายรับจริง: v.inc,
           ผลรายจ่ายจริง: v.exp,
         };
       });
-  }, [filteredData, data]);
+  }, [filteredData, data, selectedQuarter, filters.เดือน]);
 
   /* ─── pivot table (rows: หมวด×รหัสบัญชี, columns: เดือน) ── */
 

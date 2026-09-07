@@ -99,11 +99,13 @@ function AlertAxisTick({
   y,
   payload,
   alertMonths,
+  rotate = false,
 }: {
   x?: number;
   y?: number;
   payload?: { value: string };
   alertMonths: Set<string>;
+  rotate?: boolean;
 }) {
   if (!payload) return null;
   const isAlert = alertMonths.has(payload.value);
@@ -112,15 +114,16 @@ function AlertAxisTick({
       <text
         x={0}
         y={0}
-        dy={12}
-        textAnchor="middle"
+        dy={rotate ? 10 : 12}
+        textAnchor={rotate ? "end" : "middle"}
+        transform={rotate ? "rotate(-35)" : undefined}
         fontSize={12}
         fontWeight={isAlert ? 700 : 400}
         fill={isAlert ? "#dc2626" : "rgba(15,23,42,0.55)"}
       >
         {payload.value}
       </text>
-      {isAlert && (
+      {isAlert && !rotate && (
         <text x={0} y={-4} textAnchor="middle" fontSize={10} fill="#dc2626">
           ▲
         </text>
@@ -174,7 +177,12 @@ export function BarChartVertical({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
-            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            margin={{
+              top: 5,
+              right: 20,
+              left: 10,
+              bottom: data.length > 9 ? 8 : 5,
+            }}
             barCategoryGap={barCategoryGap}
           >
             <CartesianGrid
@@ -185,10 +193,16 @@ export function BarChartVertical({
             <XAxis
               dataKey="name"
               tick={(props) => (
-                <AlertAxisTick {...props} alertMonths={alertMonths} />
+                <AlertAxisTick
+                  {...props}
+                  alertMonths={alertMonths}
+                  rotate={data.length > 9}
+                />
               )}
               tickLine={false}
               axisLine={false}
+              interval={0}
+              height={data.length > 9 ? 48 : 30}
             />
             <YAxis
               tickFormatter={(val) => formatCurrency(val)}
