@@ -77,6 +77,7 @@ interface PivotRow {
   รายการบัญชี: string;
   ประเภท: string;
   values: Map<string, number>; // monthYearKey -> sum of ยอดจริง
+  total: number; // sum across all months
 }
 
 /* ─── component ────────────────────────────────────────────── */
@@ -469,6 +470,7 @@ export default function Dashboard() {
           รายการบัญชี: item,
           ประเภท: String(r.ประเภท ?? "").trim(),
           values: new Map(),
+          total: 0,
         };
         rowMap.set(key, row);
       }
@@ -478,6 +480,12 @@ export default function Dashboard() {
       row.values.set(mk, (row.values.get(mk) ?? 0) + r.ยอดจริง);
     }
     const rows = [...rowMap.values()];
+    // Row total across every displayed month
+    for (const row of rows) {
+      let total = 0;
+      for (const v of row.values.values()) total += v;
+      row.total = total;
+    }
     // Group order: numeric prefix of หมวด (1., 2., …), then first-appearance order
     const catOrder = new Map<string, number>();
     for (const row of rows) {
@@ -811,12 +819,13 @@ export default function Dashboard() {
           <div className="overflow-x-auto rounded-xl border border-black/10">
             <table
               className="w-full table-fixed text-left text-sm"
-              style={{ minWidth: 660 + pivotMonths.length * 92 }}
+              style={{ minWidth: 780 + pivotMonths.length * 92 }}
             >
               <colgroup>
                 <col style={{ width: 240 }} />
                 <col style={{ width: 120 }} />
                 <col style={{ width: 300 }} />
+                <col style={{ width: 120 }} />
                 {pivotMonths.map((m) => (
                   <col key={m.key} style={{ width: 92 }} />
                 ))}
@@ -843,6 +852,14 @@ export default function Dashboard() {
                   </th>
                   {pivotMonths.length > 0 && (
                     <th
+                      rowSpan={2}
+                      className="border-l border-black/10 bg-emerald-500/5 px-2 py-2.5 text-right align-bottom text-xs font-semibold text-emerald-700"
+                    >
+                      รวม
+                    </th>
+                  )}
+                  {pivotMonths.length > 0 && (
+                    <th
                       colSpan={pivotMonths.length}
                       className="border-b border-l border-black/10 px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground"
                     >
@@ -867,7 +884,7 @@ export default function Dashboard() {
                 {pagedPivotRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={3 + pivotMonths.length}
+                      colSpan={4 + pivotMonths.length}
                       className="px-3 py-8 text-center text-sm text-muted-foreground"
                     >
                       ไม่พบข้อมูลที่ตรงกับตัวกรอง
@@ -894,6 +911,20 @@ export default function Dashboard() {
                       <td className="break-words border-r border-black/10 px-3 py-2 text-xs text-foreground">
                         {r.รายการบัญชี}
                       </td>
+                      {pivotMonths.length > 0 && (
+                        <td
+                          className={cn(
+                            "border-l border-black/10 bg-emerald-500/5 px-2 py-2 text-right text-xs whitespace-nowrap",
+                            r.total === 0
+                              ? "text-muted-foreground/60"
+                              : r.ประเภท === "รายรับ"
+                                ? "font-semibold text-emerald-700"
+                                : "font-semibold text-orange-700",
+                          )}
+                        >
+                          {r.total !== 0 ? formatCurrencyFull(r.total) : ""}
+                        </td>
+                      )}
                       {pivotMonths.map((m) => {
                         const v = r.values.get(m.key) ?? 0;
                         return (
