@@ -831,29 +831,29 @@ export default function Dashboard() {
                 ))}
               </colgroup>
               <thead>
-                <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
+                <tr className="border-b border-black/10 bg-slate-100/70 backdrop-blur-sm">
                   <th
                     rowSpan={2}
-                    className="px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                    className="px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
                   >
                     หมวด
                   </th>
                   <th
                     rowSpan={2}
-                    className="px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                    className="px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
                   >
                     รหัสบัญชี
                   </th>
                   <th
                     rowSpan={2}
-                    className="border-r border-black/10 px-3 py-2.5 align-bottom text-xs font-semibold text-muted-foreground"
+                    className="border-r border-black/10 px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
                   >
                     รายการบัญชี
                   </th>
                   {pivotMonths.length > 0 && (
                     <th
                       rowSpan={2}
-                      className="border-l border-black/10 bg-emerald-500/5 px-2 py-2.5 text-right align-bottom text-xs font-semibold text-emerald-700"
+                      className="border-l border-black/10 bg-emerald-500/10 px-2 py-3 text-center align-middle text-[13px] font-bold text-emerald-700"
                     >
                       รวม
                     </th>
@@ -861,18 +861,18 @@ export default function Dashboard() {
                   {pivotMonths.length > 0 && (
                     <th
                       colSpan={pivotMonths.length}
-                      className="border-b border-l border-black/10 px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground"
+                      className="border-b border-l border-black/10 px-2 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
                     >
                       เดือน
                     </th>
                   )}
                 </tr>
                 {pivotMonths.length > 0 && (
-                  <tr className="border-b border-black/10 bg-black/5 backdrop-blur-sm">
+                  <tr className="border-b border-black/10 bg-slate-100/70 backdrop-blur-sm">
                     {pivotMonths.map((m) => (
                       <th
                         key={m.key}
-                        className="border-l border-black/5 px-2 py-2 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
+                        className="border-l border-black/5 px-2 py-2 text-center align-middle text-xs font-semibold whitespace-nowrap text-slate-600"
                       >
                         {m.label}
                       </th>
@@ -900,26 +900,26 @@ export default function Dashboard() {
                       {ri === 0 && (
                         <td
                           rowSpan={g.rows.length}
-                          className="break-words px-3 py-2 text-xs align-top text-foreground"
+                          className="break-words px-3 py-2 text-center align-middle text-xs font-medium text-slate-700"
                         >
                           {g.cat}
                         </td>
                       )}
-                      <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-xs text-foreground">
+                      <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-center align-middle text-xs font-medium text-slate-700">
                         {r.รหัสบัญชี}
                       </td>
-                      <td className="break-words border-r border-black/10 px-3 py-2 text-xs text-foreground">
+                      <td className="break-words border-r border-black/10 px-3 py-2 text-center align-middle text-xs text-slate-800">
                         {r.รายการบัญชี}
                       </td>
                       {pivotMonths.length > 0 && (
                         <td
                           className={cn(
-                            "border-l border-black/10 bg-emerald-500/5 px-2 py-2 text-right text-xs whitespace-nowrap",
+                            "border-l border-black/10 bg-emerald-500/10 px-2 py-2 text-center align-middle text-xs font-bold whitespace-nowrap",
                             r.total === 0
-                              ? "text-muted-foreground/60"
+                              ? "text-slate-400"
                               : r.ประเภท === "รายรับ"
-                                ? "font-semibold text-emerald-700"
-                                : "font-semibold text-orange-700",
+                                ? "text-emerald-700"
+                                : "text-orange-700",
                           )}
                         >
                           {r.total !== 0 ? formatCurrencyFull(r.total) : ""}
@@ -931,12 +931,12 @@ export default function Dashboard() {
                           <td
                             key={m.key}
                             className={cn(
-                              "border-l border-black/5 px-2 py-2 text-right text-xs whitespace-nowrap",
+                              "border-l border-black/5 px-2 py-2 text-center align-middle text-xs font-medium whitespace-nowrap",
                               v === 0
-                                ? ""
+                                ? "text-slate-400"
                                 : r.ประเภท === "รายรับ"
-                                  ? "font-medium text-emerald-700"
-                                  : "font-medium text-orange-700",
+                                  ? "text-emerald-700"
+                                  : "text-orange-700",
                             )}
                           >
                             {v !== 0 ? formatCurrencyFull(v) : ""}
