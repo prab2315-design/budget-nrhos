@@ -834,19 +834,19 @@ export default function Dashboard() {
                 <tr className="border-b border-black/10 bg-slate-100/70 backdrop-blur-sm">
                   <th
                     rowSpan={2}
-                    className="px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
+                    className="px-3 py-3 text-left align-middle text-[13px] font-bold text-slate-700"
                   >
                     หมวด
                   </th>
                   <th
                     rowSpan={2}
-                    className="px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
+                    className="px-3 py-3 text-left align-middle text-[13px] font-bold text-slate-700"
                   >
                     รหัสบัญชี
                   </th>
                   <th
                     rowSpan={2}
-                    className="border-r border-black/10 px-3 py-3 text-center align-middle text-[13px] font-bold text-slate-700"
+                    className="border-r border-black/10 px-3 py-3 text-left align-middle text-[13px] font-bold text-slate-700"
                   >
                     รายการบัญชี
                   </th>
@@ -900,15 +900,15 @@ export default function Dashboard() {
                       {ri === 0 && (
                         <td
                           rowSpan={g.rows.length}
-                          className="break-words px-3 py-2 text-center align-middle text-xs font-medium text-slate-700"
+                          className="break-words px-3 py-2 text-left align-middle text-xs font-medium text-slate-700"
                         >
                           {g.cat}
                         </td>
                       )}
-                      <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-center align-middle text-xs font-medium text-slate-700">
+                      <td className="overflow-hidden whitespace-nowrap px-3 py-2 text-left align-middle text-xs font-medium text-slate-700">
                         {r.รหัสบัญชี}
                       </td>
-                      <td className="break-words border-r border-black/10 px-3 py-2 text-center align-middle text-xs text-slate-800">
+                      <td className="break-words border-r border-black/10 px-3 py-2 text-left align-middle text-xs text-slate-800">
                         {r.รายการบัญชี}
                       </td>
                       {pivotMonths.length > 0 && (
