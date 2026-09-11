@@ -77,7 +77,17 @@ class RootErrorBoundary extends React.Component<
   }
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+// Convex only powers the auth provider shell — the dashboard reads the
+// Google Sheets API directly. On hosts without VITE_CONVEX_URL configured
+// (e.g. external deployments like Vercel) skip the provider entirely so the
+// app boots without trying to reach a Convex backend.
+const convexUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
+
+function AuthShell({ children }: { children: React.ReactNode }) {
+  if (!convex) return <>{children}</>;
+  return <ConvexAuthProvider client={convex}>{children}</ConvexAuthProvider>;
+}
 
 
 
@@ -111,7 +121,7 @@ createRoot(document.getElementById("root")!).render(
       <ToolbarErrorBoundary>
         <VlyToolbar />
       </ToolbarErrorBoundary>
-      <ConvexAuthProvider client={convex}>
+      <AuthShell>
         <BrowserRouter>
           <RouteSyncer />
           <Suspense fallback={<RouteLoading />}>
@@ -123,7 +133,7 @@ createRoot(document.getElementById("root")!).render(
           </Suspense>
         </BrowserRouter>
         <Toaster />
-      </ConvexAuthProvider>
+      </AuthShell>
     </RootErrorBoundary>
   </StrictMode>,
 );
