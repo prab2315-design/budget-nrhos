@@ -78,6 +78,7 @@ interface PivotRow {
   ประเภท: string;
   values: Map<string, number>; // monthYearKey -> sum of ยอดจริง
   total: number; // sum across all months
+  plan: number; // annual plan (แผนปี 2569) for this รหัสบัญชี + รายการบัญชี
 }
 
 /* ─── component ────────────────────────────────────────────── */
@@ -455,6 +456,19 @@ export default function Dashboard() {
 
   const pivotRows = useMemo<PivotRow[]>(() => {
     const rowMap = new Map<string, PivotRow>();
+
+    // Annual plan (แผนปี 2569) per รหัสบัญชี + รายการบัญชี from the group sheet.
+    // Each group row carries either แผนรายรับ or แผนรายจ่าย (never both), so
+    // summing both columns yields the row's annual plan. Whitespace is
+    // normalized so labels with double spaces in either sheet still match.
+    const normKey = (s: string) => s.replace(/\s+/g, " ").trim();
+    const planByKey = new Map<string, number>();
+    for (const g of data?.group ?? []) {
+      const k = `${normKey(g.รหัสบัญชี)}||${normKey(g.รายการบัญชี)}`;
+      if (k === "||") continue;
+      planByKey.set(k, (planByKey.get(k) ?? 0) + g.แผนรายรับ + g.แผนรายจ่าย);
+    }
+
     for (const r of filteredData) {
       const cat = String(r.หมวด ?? "").trim();
       const code = String(r.รหัสบัญชี ?? "").trim();
@@ -471,6 +485,7 @@ export default function Dashboard() {
           ประเภท: String(r.ประเภท ?? "").trim(),
           values: new Map(),
           total: 0,
+          plan: 0,
         };
         rowMap.set(key, row);
       }
@@ -485,6 +500,10 @@ export default function Dashboard() {
       let total = 0;
       for (const v of row.values.values()) total += v;
       row.total = total;
+      row.plan =
+        planByKey.get(
+          `${normKey(row.รหัสบัญชี)}||${normKey(row.รายการบัญชี)}`,
+        ) ?? 0;
     }
     // Group order: numeric prefix of หมวด (1., 2., …), then first-appearance order
     const catOrder = new Map<string, number>();
@@ -497,7 +516,7 @@ export default function Dashboard() {
       if (na !== nb) return na - nb;
       return (catOrder.get(a.หมวด) ?? 0) - (catOrder.get(b.หมวด) ?? 0);
     });
-  }, [filteredData]);
+  }, [filteredData, data]);
 
   const pivotView = useMemo(() => {
     if (!tableSearch.trim()) return pivotRows;
@@ -819,13 +838,14 @@ export default function Dashboard() {
           <div className="overflow-x-auto rounded-xl border border-black/10">
             <table
               className="w-full table-fixed text-left text-sm"
-              style={{ minWidth: 780 + pivotMonths.length * 92 }}
+              style={{ minWidth: 900 + pivotMonths.length * 92 }}
             >
               <colgroup>
                 <col style={{ width: 240 }} />
                 <col style={{ width: 120 }} />
                 <col style={{ width: 300 }} />
-                <col style={{ width: 120 }} />
+                <col style={{ width: 120 }} /> {/* แผนปี 2569 */}
+                <col style={{ width: 120 }} /> {/* รวม */}
                 {pivotMonths.map((m) => (
                   <col key={m.key} style={{ width: 92 }} />
                 ))}
@@ -850,6 +870,14 @@ export default function Dashboard() {
                   >
                     รายการบัญชี
                   </th>
+                  {pivotMonths.length > 0 && (
+                    <th
+                      rowSpan={2}
+                      className="border-l border-black/10 bg-blue-500/10 px-2 py-3 text-center align-middle text-[13px] font-bold text-blue-700"
+                    >
+                      แผนปี 2569
+                    </th>
+                  )}
                   {pivotMonths.length > 0 && (
                     <th
                       rowSpan={2}
@@ -884,7 +912,7 @@ export default function Dashboard() {
                 {pagedPivotRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4 + pivotMonths.length}
+                      colSpan={5 + pivotMonths.length}
                       className="px-3 py-8 text-center text-sm text-muted-foreground"
                     >
                       ไม่พบข้อมูลที่ตรงกับตัวกรอง
@@ -911,6 +939,16 @@ export default function Dashboard() {
                       <td className="break-words border-r border-black/10 px-3 py-2 text-left align-middle text-xs text-slate-800">
                         {r.รายการบัญชี}
                       </td>
+                      {pivotMonths.length > 0 && (
+                        <td
+                          className={cn(
+                            "border-l border-black/10 bg-blue-500/10 px-2 py-2 text-center align-middle text-xs font-bold whitespace-nowrap",
+                            r.plan === 0 ? "text-slate-400" : "text-blue-700",
+                          )}
+                        >
+                          {r.plan !== 0 ? formatCurrencyFull(r.plan) : ""}
+                        </td>
+                      )}
                       {pivotMonths.length > 0 && (
                         <td
                           className={cn(
