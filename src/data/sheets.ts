@@ -38,7 +38,9 @@ export interface SheetData {
 
 function buildCsvUrl(sheetName: string): string {
   const encoded = encodeURIComponent(sheetName);
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encoded}`;
+  // Cache-buster forces the request network-fresh, so every sync returns the
+  // sheet's latest data instead of a stale browser-cached CSV.
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encoded}&_=${Date.now()}`;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -84,7 +86,7 @@ function parseNum(val: string): number {
 
 async function fetchSheet(sheetName: string): Promise<string[][]> {
   const url = buildCsvUrl(sheetName);
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch sheet "${sheetName}": ${res.status}`);
   }

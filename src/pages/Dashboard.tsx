@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { RefreshCw, FileDown, Search } from "lucide-react";
+import { RefreshCw, FileDown, Search, Clock } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -693,7 +693,7 @@ export default function Dashboard() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              {/* LIVE indicator */}
+              {/* LIVE indicator + last-updated time */}
               <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1">
                 <span className="relative flex size-2">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
@@ -701,6 +701,21 @@ export default function Dashboard() {
                 </span>
                 <span className="text-xs font-medium text-emerald-600">LIVE</span>
               </div>
+              {data?.lastUpdated && (
+                <div
+                  className="hidden items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-3 py-1 sm:flex"
+                  title="เวลาที่ดึงข้อมูลล่าสุดจาก Google Sheet"
+                >
+                  <Clock className="size-3 text-slate-500" />
+                  <span className="text-xs text-slate-600">
+                    อัพเดทล่าสุด {data.lastUpdated.toLocaleTimeString("th-TH", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </span>
+                </div>
+              )}
               {/* Sync button */}
               <button
                 type="button"
