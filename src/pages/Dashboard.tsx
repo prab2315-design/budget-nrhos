@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { RefreshCw, FileDown, Search, Clock } from "lucide-react";
+import {
+  RefreshCw,
+  FileDown,
+  Search,
+  Clock,
+  FileText,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { fetchAllData, type SheetData, type TRPlanRow } from "@/data/sheets";
+import { ensureThaiFont } from "@/lib/pdfFont";
 import {
   getThaiMonth,
   getThaiMonthShort,
@@ -87,6 +94,7 @@ export default function Dashboard() {
   const [data, setData] = useState<SheetData | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Filter state – each is multi-select
   const [filters, setFilters] = useState<Record<string, string[]>>({
@@ -364,6 +372,24 @@ export default function Dashboard() {
       }))
       .filter((r) => r.แผน !== 0 || r.ผล !== 0);
   }, [data, filteredData]);
+
+  // Column totals for the PDF document export (รวมแผน/ผลตารางแผนรายรับ–รายจ่าย)
+  const totalRevPlan = useMemo(
+    () => revenueRows.reduce((s, r) => s + r.แผน, 0),
+    [revenueRows],
+  );
+  const totalRevActual = useMemo(
+    () => revenueRows.reduce((s, r) => s + r.ผล, 0),
+    [revenueRows],
+  );
+  const totalExpPlan = useMemo(
+    () => expenseRows.reduce((s, r) => s + r.แผน, 0),
+    [expenseRows],
+  );
+  const totalExpActual = useMemo(
+    () => expenseRows.reduce((s, r) => s + r.ผล, 0),
+    [expenseRows],
+  );
 
   /* ─── chart data (aggregated) ───────────────────── */
 
@@ -662,6 +688,283 @@ export default function Dashboard() {
     doc.save(`budget_data_${new Date().toISOString().slice(0, 10)}.pdf`);
   }, [filteredData]);
 
+  /* ─── full-document PDF export (เอกสารสรุปงบประมาณ) ─── */
+
+  const exportDocumentPDF = useCallback(async () => {
+    setExporting(true);
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const font = await ensureThaiFont(doc);
+      const F = font ?? "helvetica";
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const M = 14; // page margin
+      const CW = W - M * 2;
+      const now = new Date();
+      const printDate = now.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const drawPageHeader = (title: string) => {
+        const y = 14;
+        try {
+          doc.addImage(LOGO_URL, "PNG", M, y - 2, 14, 14);
+        } catch {
+          // logo optional
+        }
+        doc.setFont(font ?? "helvetica", "bold");
+        doc.setFontSize(15);
+        doc.text(
+          "แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569",
+          M + 18,
+          y + 4,
+        );
+        doc.setFont(font ?? "helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(title, M + 18, y + 10);
+        doc.setFontSize(8);
+        doc.text(`พิมพ์วันที่ ${printDate}`, W - M, y + 4, { align: "right" } as never);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(M, y + 14, W - M, y + 14);
+      };
+
+      const addPageNumbers = () => {
+        const total = doc.getNumberOfPages();
+        for (let i = 1; i <= total; i++) {
+          doc.setPage(i);
+          doc.setFont(font ?? "helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(120);
+          doc.text(
+            `หน้า ${i} / ${total}`,
+            W / 2,
+            H - 8,
+            { align: "center" } as never,
+          );
+        }
+      };
+
+      // ── Page 1: cover summary ─────────────────────────
+      drawPageHeader("สรุปภาพรวมงบประมาณ");
+
+      const box = (
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        label: string,
+        value: string,
+        color: [number, number, number],
+      ) => {
+        doc.setFillColor(color[0], color[1], color[2]);
+        doc.roundedRect(x, y, w, h, 2, 2, "F");
+        doc.setTextColor(255);
+        doc.setFont(font ?? "helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(label, x + 4, y + 6);
+        doc.setFontSize(12);
+        doc.text(value, x + 4, y + 12);
+      };
+
+      const gap = 4;
+      const bw = (CW - gap * 3) / 4; // summary box width
+      const by = 36;
+      const bh = 20;
+      box(M, by, bw, bh, "แผนรายรับ (งบประมาณ)", formatCurrencyFull(planIncome), [21, 128, 61]);
+      box(M + bw + gap, by, bw, bh, "แผนรายจ่าย (งบประมาณ)", formatCurrencyFull(planExpense), [234, 88, 12]);
+      box(M + (bw + gap) * 2, by, bw, bh, "รายรับสะสม (จริง)", formatCurrencyFull(actualIncome), [34, 197, 94]);
+      box(M + (bw + gap) * 3, by, bw, bh, "รายจ่ายสะสม (จริง)", formatCurrencyFull(actualExpense), [251, 146, 60]);
+
+      // Difference callout
+      const incDiff = actualIncome - planIncome;
+      const expDiff = actualExpense - planExpense;
+      const incRatio = planIncome > 0 ? (actualIncome / planIncome) * 100 : 0;
+      const expRatio = planExpense > 0 ? (actualExpense / planExpense) * 100 : 0;
+      doc.setTextColor(30);
+      doc.setFont(font ?? "helvetica", "normal");
+      doc.setFontSize(10);
+      const calloutY = by + bh + 8;
+      doc.setFillColor(245, 247, 250);
+      doc.roundedRect(M, calloutY, CW, 26, 2, 2, "F");
+      doc.setFontSize(10);
+      doc.text(
+        `ผลต่างรายรับ: ${incDiff >= 0 ? "+" : ""}${formatCurrencyFull(incDiff)}  (จริง/แผน ${incRatio.toFixed(1)}%)`,
+        M + 5,
+        calloutY + 8,
+      );
+      doc.text(
+        `ผลต่างรายจ่าย: ${expDiff >= 0 ? "+" : ""}${formatCurrencyFull(expDiff)}  (จริง/แผน ${expRatio.toFixed(1)}%)`,
+        M + 5,
+        calloutY + 16,
+      );
+      doc.text(`จำนวนรายการทั้งหมด: ${filteredData.length} รายการ`, M + 5, calloutY + 24);
+
+      addPageNumbers();
+
+      // ── Revenue table (แผนรายรับ) ────────────────────
+      if (revenueRows.length > 0) {
+        doc.addPage();
+        drawPageHeader("เปรียบเทียบแผนรายรับกับผลจริง จำแนกตามหมวด");
+        autoTable(doc, {
+          startY: 36,
+          head: [["หมวด", "แผน (บาท)", "ผลจริง (บาท)", "ผลต่าง (บาท)"]],
+          body: revenueRows.map((r) => [
+            r.หมวด,
+            r.แผน.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            r.ผล.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            (r.ผล - r.แผน).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+          ]),
+          foot: [
+            [
+              "รวม",
+              totalRevPlan.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+              totalRevActual.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+              (totalRevActual - totalRevPlan).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            ],
+          ],
+          styles: {
+            fontSize: 9,
+            cellPadding: 2,
+            font: F,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: [21, 128, 61],
+            textColor: 255,
+            fontStyle: "bold",
+            fontSize: 9,
+          },
+          footStyles: {
+            fillColor: [240, 245, 240],
+            textColor: 30,
+            fontStyle: "bold",
+            fontSize: 9,
+          },
+          alternateRowStyles: { fillColor: [246, 250, 246] },
+          columnStyles: {
+            0: { halign: "left", cellWidth: 70 },
+            1: { halign: "right" },
+            2: { halign: "right" },
+            3: { halign: "right" },
+          },
+          margin: { left: M, right: M },
+        });
+      }
+
+      // ── Expense table (แผนรายจ่าย) ───────────────────
+      if (expenseRows.length > 0) {
+        doc.addPage();
+        drawPageHeader("เปรียบเทียบแผนรายจ่ายกับผลจริง จำแนกตามหมวด");
+        autoTable(doc, {
+          startY: 36,
+          head: [["หมวด", "แผน (บาท)", "ผลจริง (บาท)", "ผลต่าง (บาท)"]],
+          body: expenseRows.map((r) => [
+            r.หมวด,
+            r.แผน.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            r.ผล.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            (r.ผล - r.แผน).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+          ]),
+          foot: [
+            [
+              "รวม",
+              totalExpPlan.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+              totalExpActual.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+              (totalExpActual - totalExpPlan).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            ],
+          ],
+          styles: {
+            fontSize: 9,
+            cellPadding: 2,
+            font: F,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: [234, 88, 12],
+            textColor: 255,
+            fontStyle: "bold",
+            fontSize: 9,
+          },
+          footStyles: {
+            fillColor: [252, 246, 240],
+            textColor: 30,
+            fontStyle: "bold",
+            fontSize: 9,
+          },
+          alternateRowStyles: { fillColor: [253, 248, 244] },
+          columnStyles: {
+            0: { halign: "left", cellWidth: 70 },
+            1: { halign: "right" },
+            2: { halign: "right" },
+            3: { halign: "right" },
+          },
+          margin: { left: M, right: M },
+        });
+      }
+
+      // ── Detail table (รายการทั้งหมด) ─────────────────
+      if (filteredData.length > 0) {
+        doc.addPage();
+        drawPageHeader("รายการรายรับ–รายจ่ายทั้งหมด");
+        autoTable(doc, {
+          startY: 36,
+          head: [["เดือน", "รหัสบัญชี", "หมวด", "รายการบัญชี", "ยอดจริง (บาท)", "ประเภท"]],
+          body: filteredData.map((r) => [
+            r.เดือน,
+            r.รหัสบัญชี,
+            r.หมวด,
+            r.รายการบัญชี,
+            r.ยอดจริง.toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+            r.ประเภท,
+          ]),
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 1.4,
+            font: F,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: [59, 130, 246],
+            textColor: 255,
+            fontStyle: "bold",
+            fontSize: 7.5,
+          },
+          alternateRowStyles: { fillColor: [240, 245, 255] },
+          columnStyles: {
+            0: { cellWidth: 26 },
+            1: { cellWidth: 22 },
+            2: { cellWidth: 36 },
+            3: { cellWidth: 60 },
+            4: { cellWidth: 26, halign: "right" },
+            5: { cellWidth: 14, halign: "center" },
+          },
+          margin: { left: M, right: M },
+        });
+      }
+
+      addPageNumbers();
+
+      doc.save(
+        `budget_document_${new Date().toISOString().slice(0, 10)}.pdf`,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    filteredData,
+    planIncome,
+    planExpense,
+    actualIncome,
+    actualExpense,
+    revenueRows,
+    expenseRows,
+    totalRevPlan,
+    totalRevActual,
+    totalExpPlan,
+    totalExpActual,
+  ]);
+
   /* ─── render ────────────────────────────────────── */
 
   if (loading) {
@@ -827,6 +1130,17 @@ export default function Dashboard() {
                 />
               </div>
               {/* Export buttons */}
+              <button
+                type="button"
+                onClick={exportDocumentPDF}
+                disabled={exporting || !filteredData.length}
+                className="flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-500/25 disabled:opacity-40"
+              >
+                <FileText
+                  className={`size-3.5 ${exporting ? "animate-pulse" : ""}`}
+                />
+                {exporting ? "กำลังสร้างเอกสาร..." : "เอกสาร PDF"}
+              </button>
               <button
                 type="button"
                 onClick={exportPDF}
