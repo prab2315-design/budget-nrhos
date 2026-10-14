@@ -37,7 +37,6 @@ export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
     <div className="glass-card p-5">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <span className="section-num section-num--green">2ก</span>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
           <Banknote className="size-4 text-emerald-600" />
         </span>

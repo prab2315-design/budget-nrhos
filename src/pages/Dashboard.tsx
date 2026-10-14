@@ -770,8 +770,7 @@ export default function Dashboard() {
 
         {/* ── Filters ────────────────────── */}
         <div className="glass-card relative z-10 p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="section-num section-num--slate">4</span>
+          <div className="mb-3">
             <h2 className="text-lg font-bold tracking-tight text-foreground">
               กรองข้อมูล
             </h2>
@@ -810,8 +809,7 @@ export default function Dashboard() {
         {/* ── Data Table ─────────────────── */}
         <div className="glass-card p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="section-num section-num--slate">5</span>
+            <div>
               <h2 className="text-lg font-bold tracking-tight text-foreground">
                 บันทึกรายการ ({pivotView.length} รายการ)
               </h2>

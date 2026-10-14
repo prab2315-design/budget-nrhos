@@ -105,7 +105,6 @@ export function ExpenseBreakdown({ rows, label }: ExpenseBreakdownProps) {
     <div className="glass-card p-5">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <span className="section-num section-num--orange">2ข</span>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-orange-500/15">
           <Receipt className="size-4 text-orange-600" />
         </span>

@@ -129,8 +129,7 @@ export function PlanActualComparison({
 
   return (
     <div className="glass-card p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="section-num section-num--blue">2ก</span>
+      <div className="mb-4">
         <h3 className="text-base font-bold tracking-tight text-foreground">
           เปรียบเทียบแผนกับยอดจริงสะสม
         </h3>
