@@ -697,15 +697,23 @@ export default function Dashboard() {
         if (!monthKeys.includes(k)) monthKeys.push(k);
       }
       monthKeys.sort((a, b) => a.localeCompare(b));
-      const prevKey =
-        monthKeys.length >= 2 ? monthKeys[monthKeys.length - 2] : null;
+        const prevKey =
+          monthKeys.length >= 2 ? monthKeys[monthKeys.length - 2] : null;
 
       // แผนทั้งปีต่อ รหัสบัญชี+รายการบัญชี (ชีต group แต่ละแถวมีคอลัมน์แผนเดียว)
-      const planByKey = new Map<string, number>();
+      // เก็บ ord = ลำดับแถวแรกที่พบในชีต group เพื่อเรียงรายการเหมือนต้นฉบับ
+      const planByKey = new Map<
+        string,
+        { plan: number; ord: number }
+      >();
       for (const g of data.group) {
         const k = `${norm(g.รหัสบัญชี)}||${norm(g.รายการบัญชี)}`;
         if (k === "||") continue;
-        planByKey.set(k, (planByKey.get(k) ?? 0) + g.แผนรายรับ + g.แผนรายจ่าย);
+        const cur = planByKey.get(k);
+        planByKey.set(k, {
+          plan: (cur?.plan ?? 0) + g.แผนรายรับ + g.แผนรายจ่าย,
+          ord: cur?.ord ?? planByKey.size,
+        });
       }
 
       interface ReportItem {
@@ -715,6 +723,7 @@ export default function Dashboard() {
         prev: number;
         cum: number;
         plan: number;
+        ord: number;
       }
       const itemMap = new Map<string, ReportItem>();
       for (const r of data.trplan) {
@@ -730,7 +739,8 @@ export default function Dashboard() {
             item,
             prev: 0,
             cum: 0,
-            plan: planByKey.get(k) ?? 0,
+            plan: planByKey.get(k)?.plan ?? 0,
+            ord: planByKey.get(k)?.ord ?? Number.MAX_SAFE_INTEGER,
           };
           itemMap.set(k, e);
         }
@@ -740,15 +750,6 @@ export default function Dashboard() {
           e.prev += r.ยอดจริง;
         }
       }
-
-      // ── Revenue table (แผนรายรับ) ────────────────────
-
-
-      // ── Expense table (แผนรายจ่าย) ───────────────────
-
-
-      // ── Detail table (รายการทั้งหมด) ─────────────────
-
 
       // ── สร้างแถวตาราง (รายรับ → รายจ่าย จัดกลุ่มตามหมวด) ──
       const rows: unknown[] = [];
@@ -760,26 +761,23 @@ export default function Dashboard() {
         const items = [...itemMap.values()].filter((e) => e.ประเภท === t);
         if (items.length === 0) continue;
         const tt = totals[t];
-        rows.push({
-          content: t,
-          colSpan: 6,
-          styles: {
-            fontStyle: "bold",
-            fillColor: [214, 220, 229],
-            halign: "left",
-          },
-        });
-        const catOrder = new Map<string, number>();
-        for (const e of items) {
-          if (!catOrder.has(e.หมวด)) catOrder.set(e.หมวด, catOrder.size);
-        }
-        const cats = [...catOrder.keys()].sort((a, b) => {
+        // หมวดเรียงตาม prefix ตัวเลข (1., 2., …) เพื่อตรงลำดับต้นฉบับ
+        const cats = [...new Set(items.map((e) => e.หมวด))].sort((a, b) => {
           const na = parseInt(a.match(/^(\d+)/)?.[1] ?? "999", 10);
           const nb = parseInt(b.match(/^(\d+)/)?.[1] ?? "999", 10);
           if (na !== nb) return na - nb;
-          return (catOrder.get(a) ?? 0) - (catOrder.get(b) ?? 0);
+          return a.localeCompare(b);
         });
         for (const cat of cats) {
+          rows.push({
+            content: t === "รายรับ" ? "รายรับ" : "",
+            colSpan: 6,
+            styles: {
+              fontStyle: "bold",
+              fillColor: [242, 242, 242],
+              halign: "left",
+            },
+          });
           rows.push({
             content: cat,
             colSpan: 6,
@@ -791,24 +789,33 @@ export default function Dashboard() {
           });
           for (const e of items
             .filter((it) => it.หมวด === cat)
-            .sort((a, b) => a.item.localeCompare(b.item))) {
+            .sort((a, b) => {
+              if (a.ord !== b.ord) return a.ord - b.ord;
+              return a.item.localeCompare(b.item);
+            })) {
             tt.plan += e.plan;
             tt.prev += e.prev;
             tt.cum += e.cum;
             const diff = e.plan - e.cum;
+            // ภาพต้นฉบับ: ส่วนต่าง = ผลจ่ายสะสม − แผน (ติดลบ = ใช้เกินแผน)
+            // ร้อยละ = ผลจ่ายสะสม ÷ แผน × 100 (คู่ส่วนต่างติดลบ)
+            const sdiff = e.cum - e.plan;
             const pct = e.plan > 0 ? (e.cum / e.plan) * 100 : null;
             rows.push([
               e.item,
               fmt(e.plan),
-              e.prev !== 0 ? fmt(e.prev) : "-",
-              fmt(e.cum),
-              diff < 0 ? `${fmt(Math.abs(diff))} -` : fmt(diff),
-              pct === null
-                ? "-"
-                : {
-                    content: pct.toFixed(2),
-                    styles: pct < 100 ? { textColor: [200, 0, 0] } : {},
-                  },
+              e.plan === 0 && e.prev === 0 && e.cum === 0 ? "" : e.prev !== 0 ? fmt(e.prev) : "-",
+              e.plan === 0 && e.prev === 0 && e.cum === 0 ? "" : fmt(e.cum),
+              sdiff === 0 ? "" : sdiff < 0 ? `${fmt(Math.abs(sdiff))} -` : fmt(sdiff),
+              {
+                content: pct === null
+                  ? e.plan === 0 && e.cum === 0 ? "0.00" : "-"
+                  : pct.toFixed(2),
+                styles:
+                  pct !== null && pct < 100
+                    ? { textColor: [200, 0, 0] }
+                    : {},
+              },
             ]);
           }
         }
@@ -819,7 +826,7 @@ export default function Dashboard() {
         label: string,
         t: { plan: number; prev: number; cum: number },
       ): unknown => {
-        const diff = t.plan - t.cum;
+        const diff = t.cum - t.plan;
         const pct = t.plan > 0 ? (t.cum / t.plan) * 100 : null;
         return [
           {
@@ -832,26 +839,26 @@ export default function Dashboard() {
           },
           {
             content: fmt(t.plan),
-            styles: { fontStyle: "bold", fillColor: [198, 239, 206] },
+            styles: { fontStyle: "bold", fillColor: [253, 234, 218] },
           },
           {
-            content: fmt(t.prev),
-            styles: { fontStyle: "bold", fillColor: [217, 240, 211] },
+            content: fmt(t.plan === 0 && t.cum === 0 ? 0 : t.prev),
+            styles: { fontStyle: "bold", fillColor: [227, 245, 218] },
           },
           {
-            content: fmt(t.cum),
-            styles: { fontStyle: "bold", fillColor: [191, 219, 254] },
+            content: fmt(t.plan === 0 && t.cum === 0 ? 0 : t.cum),
+            styles: { fontStyle: "bold", fillColor: [222, 245, 250] },
           },
           {
-            content: diff < 0 ? `${fmt(Math.abs(diff))} -` : fmt(diff),
-            styles: { fontStyle: "bold", fillColor: [252, 228, 214] },
+            content: diff === 0 ? "0.00" : diff < 0 ? `${fmt(Math.abs(diff))} -` : fmt(diff),
+            styles: { fontStyle: "bold", fillColor: [235, 235, 235] },
           },
           {
-            content: pct === null ? "-" : pct.toFixed(2),
+            content: pct === null ? "0.00" : pct.toFixed(2),
             styles: {
               fontStyle: "bold",
-              fillColor: [228, 217, 239],
-              textColor: pct !== null && pct < 100 ? [200, 0, 0] : [20, 20, 20],
+              fillColor: [252, 236, 250],
+              textColor: pct !== null && pct < 100 ? [200, 0, 0] : [200, 0, 0],
             },
           },
         ];
@@ -902,7 +909,7 @@ export default function Dashboard() {
             "ผลจ่ายเดือนก่อนหน้า",
             "ผลดำเนินการเดือนปัจจุบัน",
             "ส่วนต่าง",
-            "ร้อยละดำเนินการเทียบกับเป้าหมายแผน",
+            "ร้อยละแผน ดำเนินการ\nคิดเป็นของแผน",
           ],
         ],
         body: rows as never,
@@ -926,11 +933,11 @@ export default function Dashboard() {
             const isTitleRow = d.row.index === 0;
             const fills: [number, number, number][] = [
               [242, 242, 242], // รายการ
-              [226, 240, 217], // แผนเบิกจ่ายรวมทั้งปี
-              [217, 240, 211], // ผลจ่ายเดือนก่อนหน้า
-              [255, 242, 204], // ผลดำเนินการเดือนปัจจุบัน
-              [252, 228, 214], // ส่วนต่าง
-              [228, 217, 239], // ร้อยละดำเนินการ
+              [252, 228, 214], // แผนเบิกจ่ายรวมทั้งปี
+              [226, 239, 217], // ผลจ่ายเดือนก่อนหน้า
+              [217, 235, 248], // ผลดำเนินการเดือนปัจจุบัน
+              [242, 242, 242], // ส่วนต่าง
+              [240, 217, 238], // ร้อยละแผนดำเนินการ
             ];
             d.cell.styles.fillColor = isTitleRow
               ? [242, 242, 242]
