@@ -1,0 +1,4 @@
+# Cloudflare Pages SPA fallback: client-side routes (React Router) resolve to
+# index.html while real files (assets, logo, manifest) keep serving as-is.
+/assets/*  /assets/:splat  200
+/*         /index.html     200
