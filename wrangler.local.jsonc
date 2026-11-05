@@ -1,0 +1,13 @@
+{
+  // Local-only config used to verify the Workers build with `wrangler dev`
+  // before deploying. Not used by the deploy step (see deploy.json).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "budget-dashboard",
+  "main": "./deploy/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  }
+}
