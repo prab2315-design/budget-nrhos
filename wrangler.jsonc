@@ -1,0 +1,15 @@
+{
+  // Cloudflare Workers configuration used by `wrangler deploy` and by
+  // Cloudflare Workers Builds (Git integration). The Worker serves the Vite
+  // build output in ./dist as static assets and falls back to index.html for
+  // client-side routes.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "budget-nrhos",
+  "main": "./deploy/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  }
+}
