@@ -11,6 +11,7 @@ export interface RevenueBreakdownRow {
 interface RevenueBreakdownProps {
   rows: RevenueBreakdownRow[];
   label?: string;
+  fiscalYear: number;
 }
 
 const SECTION_OPERATIONS = "รายรับจากการดำเนินงาน";
@@ -23,7 +24,7 @@ function sectionOf(หมวด: string): string {
   return SECTION_OTHER;
 }
 
-export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
+export function RevenueBreakdown({ rows, label, fiscalYear }: RevenueBreakdownProps) {
   const sections = [
     { name: `1. ${SECTION_OPERATIONS}`, rows: rows.filter((r) => sectionOf(r.หมวด) === SECTION_OPERATIONS) },
     { name: `2. ${SECTION_OTHER}`, rows: rows.filter((r) => sectionOf(r.หมวด) === SECTION_OTHER) },
@@ -74,10 +75,10 @@ export function RevenueBreakdown({ rows, label }: RevenueBreakdownProps) {
             </tr>
             <tr className="border-b border-black/10 bg-black/5">
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
-                แผนปีงบประมาณ พ.ศ.2569
+                แผนปีงบประมาณ พ.ศ.{fiscalYear}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
-                ผลปีงบประมาณ พ.ศ.2569
+                ผลปีงบประมาณ พ.ศ.{fiscalYear}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
                 ส่วนต่าง

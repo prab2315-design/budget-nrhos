@@ -9,7 +9,14 @@
  *   A: ลำดับ, B: รหัสบัญชี, C: หมวด, D: รายการบัญชี, E: แผนรายรับ, F: แผนรายจ่าย
  */
 
-const SHEET_ID = "1v8ukcrICXPJMLoU2QFpPYwIEswq1k-7afWiiVTezypo";
+// Add a fiscal year here when its own Google Spreadsheet is available.
+export const FISCAL_YEAR_SHEETS: Record<number, string> = {
+  2569: "1v8ukcrICXPJMLoU2QFpPYwIEswq1k-7afWiiVTezypo",
+  2570: "16Y1srSIZR0j-KfS2646MnQbF8kx4QkRAN1YOP-1gxnw",
+};
+export const AVAILABLE_FISCAL_YEARS = Object.keys(FISCAL_YEAR_SHEETS)
+  .map(Number)
+  .sort((a, b) => b - a);
 
 export interface TRPlanRow {
   ลำดับ: string;
@@ -36,11 +43,11 @@ export interface SheetData {
   lastUpdated: Date;
 }
 
-function buildCsvUrl(sheetName: string): string {
+function buildCsvUrl(sheetId: string, sheetName: string): string {
   const encoded = encodeURIComponent(sheetName);
   // Cache-buster forces the request network-fresh, so every sync returns the
   // sheet's latest data instead of a stale browser-cached CSV.
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encoded}&_=${Date.now()}`;
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encoded}&_=${Date.now()}`;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -84,14 +91,25 @@ function parseNum(val: string): number {
   return isNaN(num) ? 0 : num;
 }
 
-async function fetchSheet(sheetName: string): Promise<string[][]> {
-  const url = buildCsvUrl(sheetName);
+async function fetchSheet(sheetId: string, sheetName: string): Promise<string[][]> {
+  const url = buildCsvUrl(sheetId, sheetName);
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch sheet "${sheetName}": ${res.status}`);
   }
   const text = await res.text();
-  return parseCsv(text);
+  const rows = parseCsv(text);
+  if (rows.length < 2 || /<!doctype html|<html/i.test(text.slice(0, 300))) {
+    throw new Error(`Sheet "${sheetName}" is not readable or has no data`);
+  }
+  const header = rows[0].join(" ");
+  if (sheetName === "TRplan" && !header.includes("เดือน")) {
+    throw new Error("TRplan sheet columns do not match the expected format");
+  }
+  if (sheetName === "group" && !header.includes("แผนรายรับ")) {
+    throw new Error("group sheet columns do not match the expected format");
+  }
+  return rows;
 }
 
 function mapTRPlan(rows: string[][]): TRPlanRow[] {
@@ -123,10 +141,12 @@ function mapGroup(rows: string[][]): GroupRow[] {
 /**
  * Fetch all data from both sheets
  */
-export async function fetchAllData(): Promise<SheetData> {
+export async function fetchAllData(fiscalYear: number): Promise<SheetData> {
+  const sheetId = FISCAL_YEAR_SHEETS[fiscalYear];
+  if (!sheetId) throw new Error(`No spreadsheet configured for fiscal year ${fiscalYear}`);
   const [trplanRaw, groupRaw] = await Promise.all([
-    fetchSheet("TRplan"),
-    fetchSheet("group"),
+    fetchSheet(sheetId, "TRplan"),
+    fetchSheet(sheetId, "group"),
   ]);
 
   return {

@@ -5,11 +5,12 @@ import {
   Search,
   Clock,
   FileText,
+  CalendarDays,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable, { type CellHookData } from "jspdf-autotable";
 
-import { fetchAllData, type SheetData, type TRPlanRow } from "@/data/sheets";
+import { fetchAllData, AVAILABLE_FISCAL_YEARS, type SheetData, type TRPlanRow } from "@/data/sheets";
 import { ensureThaiFont } from "@/lib/pdfFont";
 import {
   getThaiMonth,
@@ -22,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { QuarterFilter, QUARTER_RANGES } from "@/components/QuarterFilter";
+import { QuarterFilter, quarterRanges } from "@/components/QuarterFilter";
 import { SummaryCards } from "@/components/SummaryCards";
 import { BarChartVertical } from "@/components/BarChartVertical";
 import { PlanActualComparison } from "@/components/PlanActualComparison";
@@ -71,9 +72,6 @@ const FILTER_COLS = [
 const TYPE_SCOPED_COLS = ["หมวด", "รายการบัญชี"];
 // รหัสบัญชี options are scoped by the selected หมวด (cascade: ประเภท → หมวด → รหัสบัญชี)
 
-// Fiscal-year boundaries (ปีงบประมาณ 2569: ต.ค. 2568 – ก.ย. 2569), derived from quarter ranges
-const FY_START = QUARTER_RANGES.Q1;
-const FY_END = QUARTER_RANGES.Q4;
 const MONTHS_PER_FY = 12;
 
 /* ─── pivot table row (บันทึกรายการ shown as a month matrix) ── */
@@ -91,7 +89,10 @@ interface PivotRow {
 /* ─── component ────────────────────────────────────────────── */
 
 export default function Dashboard() {
+  const [fiscalYear, setFiscalYear] = useState<number>(AVAILABLE_FISCAL_YEARS[0] ?? 2569);
+  const ranges = useMemo(() => quarterRanges(fiscalYear), [fiscalYear]);
   const [data, setData] = useState<SheetData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -117,16 +118,28 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     setSyncing(true);
+    setLoadError(null);
+    setData(null);
     try {
-      const d = await fetchAllData();
+      const d = await fetchAllData(fiscalYear);
       setData(d);
     } catch (err) {
       console.error("Fetch error:", err);
+      setLoadError(`ไม่สามารถโหลดข้อมูลปีงบประมาณ ${fiscalYear} ได้ กรุณาตรวจสอบสิทธิ์การเผยแพร่ Google Sheets และชื่อแท็บ TRplan / group`);
     } finally {
       setLoading(false);
       setTimeout(() => setSyncing(false), 600);
     }
-  }, []);
+  }, [fiscalYear]);
+
+  const changeFiscalYear = (year: number) => {
+    setFiscalYear(year);
+    setSelectedQuarter(null);
+    setFilters({ เดือน: [], รหัสบัญชี: [], หมวด: [], รายการบัญชี: [], ประเภท: [] });
+    setTablePage(0);
+    setTableSearch("");
+    setLoading(true);
+  };
 
   useEffect(() => {
     fetchData();
@@ -136,9 +149,13 @@ export default function Dashboard() {
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    let rows = data.trplan;
+    const fiscalStartYear = fiscalYear - 544;
+    let rows = data.trplan.filter((r) => {
+      const p = parseMonthYear(r.เดือน);
+      return !!p.month && !!p.year && isInDateRange(r, 10, fiscalStartYear, 9, fiscalStartYear + 1);
+    });
     if (selectedQuarter) {
-      const q = QUARTER_RANGES[selectedQuarter];
+      const q = ranges[selectedQuarter];
       if (q) {
         rows = rows.filter((r) =>
           isInDateRange(
@@ -160,7 +177,7 @@ export default function Dashboard() {
       }
     }
     return rows;
-  }, [data, filters, selectedQuarter]);
+  }, [data, filters, selectedQuarter, fiscalYear, ranges]);
 
   // Unique options per filter column.
   // หมวด and รายการบัญชี options are scoped to the selected ประเภท (รายรับ/รายจ่าย),
@@ -172,7 +189,7 @@ export default function Dashboard() {
     const catSel = filters["หมวด"] ?? [];
     for (const col of FILTER_COLS) {
       const seen = new Set<string>();
-      for (const r of data.trplan) {
+      for (const r of data.trplan.filter((r) => isInDateRange(r, 10, fiscalYear - 544, 9, fiscalYear - 543))) {
         if (TYPE_SCOPED_COLS.includes(col.key) && typeSel.length > 0) {
           const t = String(r.ประเภท ?? "").trim();
           if (!typeSel.includes(t)) continue;
@@ -189,7 +206,7 @@ export default function Dashboard() {
       }
     }
     return opts;
-  }, [data, filters]);
+  }, [data, filters, fiscalYear]);
 
   // Drop selections that no longer match their parent scope:
   // หมวด / รายการบัญชี follow ประเภท, and รหัสบัญชี follows หมวด.
@@ -273,7 +290,7 @@ export default function Dashboard() {
       return `ประจำเดือน ${formatted}`;
     }
     if (selectedQuarter) {
-      const q = QUARTER_RANGES[selectedQuarter];
+      const q = ranges[selectedQuarter];
       if (q) {
         const fmt = (mo: number, yr: number) =>
           `${getThaiMonthShort(mo)} ${String(toBuddhistYear(yr)).slice(-2)}`;
@@ -284,7 +301,7 @@ export default function Dashboard() {
       }
     }
     return "ทุกเดือน";
-  }, [filters.เดือน, selectedQuarter]);
+  }, [filters.เดือน, selectedQuarter, ranges]);
 
   /* ─── revenue breakdown (แผนรายรับ by หมวด) ───── */
 
@@ -404,7 +421,7 @@ export default function Dashboard() {
       }
     };
     if (selectedQuarter) {
-      const q = QUARTER_RANGES[selectedQuarter];
+      const q = ranges[selectedQuarter];
       if (q) addRange(q.startMonth, q.startYear, q.endMonth, q.endYear);
     } else if (filters.เดือน.length > 0) {
       for (const m of filters.เดือน) {
@@ -414,7 +431,7 @@ export default function Dashboard() {
     }
     if (keys.size === 0) {
       // No time filter (or unparseable): show the complete fiscal year
-      addRange(FY_START.startMonth, FY_START.startYear, FY_END.endMonth, FY_END.endYear);
+      addRange(10, fiscalYear - 544, 9, fiscalYear - 543);
     }
     // Keep any data months outside the default range too
     for (const k of monthMap.keys()) keys.add(k);
@@ -440,7 +457,7 @@ export default function Dashboard() {
           ผลรายจ่ายจริง: v.exp,
         };
       });
-  }, [filteredData, data, selectedQuarter, filters.เดือน]);
+  }, [filteredData, data, selectedQuarter, filters.เดือน, fiscalYear, ranges]);
 
   /* ─── pivot table (rows: หมวด×รหัสบัญชี, columns: เดือน) ── */
 
@@ -609,7 +626,7 @@ export default function Dashboard() {
     // Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569", 34, 17);
+    doc.text(`แผนรายรับ รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ ${fiscalYear}`, 34, 17);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(
@@ -668,7 +685,7 @@ export default function Dashboard() {
     });
 
     doc.save(`budget_data_${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [filteredData]);
+  }, [filteredData, fiscalYear]);
 
   /* ─── full-document PDF export (รายงานเบิกจ่ายเงินแผน/รายจ่าย สปส.4_ร) ─── */
 
@@ -888,7 +905,7 @@ export default function Dashboard() {
           23,
           { align: "center" } as never,
         );
-        doc.text("ประจำปีงบประมาณ 2569", W / 2, 28.5, {
+        doc.text(`ประจำปีงบประมาณ ${fiscalYear}`, W / 2, 28.5, {
           align: "center",
         } as never);
         doc.setFont(F, "normal");
@@ -975,7 +992,7 @@ export default function Dashboard() {
     } finally {
       setExporting(false);
     }
-  }, [data]);
+  }, [data, fiscalYear]);
 
   /* ─── render ────────────────────────────────────── */
 
@@ -1004,7 +1021,7 @@ export default function Dashboard() {
           <div className="relative flex flex-col gap-5 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <h1 className="text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
-                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
+                แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ {fiscalYear}
               </h1>
             </div>
             <div className="flex items-center gap-3">
@@ -1051,6 +1068,23 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Fiscal-year selector controls the entire dashboard and data source. */}
+        <section className="glass-card flex flex-col gap-3 border-l-4 border-l-emerald-500 p-5 sm:flex-row sm:items-center sm:justify-between" aria-label="เลือกปีงบประมาณ">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700"><CalendarDays className="size-5" /></span>
+            <div><h2 className="font-bold text-foreground">เลือกปีงบประมาณ</h2><p className="text-xs text-muted-foreground">เปลี่ยนแหล่งข้อมูลรายรับ–รายจ่ายตามปีที่เลือก</p></div>
+          </div>
+          <select value={fiscalYear} onChange={(e) => changeFiscalYear(Number(e.target.value))} className="glass-input min-h-11 min-w-48 rounded-xl px-4 text-base font-semibold" aria-label="ปีงบประมาณ">
+            {AVAILABLE_FISCAL_YEARS.map((year) => <option key={year} value={year}>พ.ศ. {year}</option>)}
+          </select>
+        </section>
+
+        {loadError && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">{loadError} <button type="button" onClick={fetchData} className="ml-2 font-bold underline">ลองอีกครั้ง</button></div>}
+
+        {!data && !loadError && <div className="glass-card p-6 text-center text-muted-foreground">กำลังโหลดข้อมูลปีงบประมาณ {fiscalYear}...</div>}
+
+        {data && <>
+
         {/* ── Summary Cards ──────────────── */}
         <SummaryCards
           planIncome={planIncome}
@@ -1079,8 +1113,8 @@ export default function Dashboard() {
 
         {/* ── Revenue + Expense breakdowns side by side ── */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <RevenueBreakdown rows={revenueRows} label={periodLabel} />
-          <ExpenseBreakdown rows={expenseRows} label={periodLabel} />
+          <RevenueBreakdown rows={revenueRows} label={periodLabel} fiscalYear={fiscalYear} />
+          <ExpenseBreakdown rows={expenseRows} label={periodLabel} fiscalYear={fiscalYear} />
         </div>
 
         {/* ── Filters ────────────────────── */}
@@ -1104,6 +1138,7 @@ export default function Dashboard() {
               />
             ))}
             <QuarterFilter
+              fiscalYear={fiscalYear}
               selected={selectedQuarter}
               onChange={setSelectedQuarter}
             />
@@ -1214,7 +1249,7 @@ export default function Dashboard() {
                       rowSpan={2}
                       className="border-l border-black/10 bg-blue-500/10 px-2 py-3 text-center align-middle text-[13px] font-bold text-blue-700"
                     >
-                      แผนปี 2569
+                      แผนปี {fiscalYear}
                     </th>
                   )}
                   {pivotMonths.length > 0 && (
@@ -1394,10 +1429,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
             <MophEmblem className="size-5 shrink-0" />
             <span>
-              อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ 2569
+              อัปเดตครั้งสุดท้าย {data?.lastUpdated?.toLocaleString("th-TH") ?? "—"} · แผนรายรับ–รายจ่าย เงินบำรุงโรงพยาบาลนางรอง ปีงบประมาณ {fiscalYear}
             </span>
           </div>
         </footer>
+        </>}
       </div>
     </main>
   );

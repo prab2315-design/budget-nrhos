@@ -9,26 +9,31 @@ export interface QuarterRange {
   endYear: number;
 }
 
-export const QUARTER_RANGES: Record<string, QuarterRange> = {
-  Q1: { startMonth: 10, startYear: 2025, endMonth: 12, endYear: 2025 },
-  Q2: { startMonth: 1, startYear: 2026, endMonth: 3, endYear: 2026 },
-  Q3: { startMonth: 4, startYear: 2026, endMonth: 6, endYear: 2026 },
-  Q4: { startMonth: 7, startYear: 2026, endMonth: 9, endYear: 2026 },
-};
+export function quarterRanges(fiscalYear: number): Record<string, QuarterRange> {
+  const calendarYear = fiscalYear - 543;
+  return {
+    Q1: { startMonth: 10, startYear: calendarYear - 1, endMonth: 12, endYear: calendarYear - 1 },
+    Q2: { startMonth: 1, startYear: calendarYear, endMonth: 3, endYear: calendarYear },
+    Q3: { startMonth: 4, startYear: calendarYear, endMonth: 6, endYear: calendarYear },
+    Q4: { startMonth: 7, startYear: calendarYear, endMonth: 9, endYear: calendarYear },
+  };
+}
 
-const QUARTER_OPTIONS = [
-  { id: "Q1", label: "ไตรมาสที่ 1 (ต.ค. 68 - ธ.ค. 68)" },
-  { id: "Q2", label: "ไตรมาสที่ 2 (ม.ค. 69 - มี.ค. 69)" },
-  { id: "Q3", label: "ไตรมาสที่ 3 (เม.ย. 69 - มิ.ย. 69)" },
-  { id: "Q4", label: "ไตรมาสที่ 4 (ก.ค. 69 - ก.ย. 69)" },
+const QUARTER_MONTHS = [
+  ["ต.ค.", "ธ.ค."], ["ม.ค.", "มี.ค."], ["เม.ย.", "มิ.ย."], ["ก.ค.", "ก.ย."],
 ];
 
 interface QuarterFilterProps {
   selected: string | null;
   onChange: (quarter: string | null) => void;
+  fiscalYear: number;
 }
 
-export function QuarterFilter({ selected, onChange }: QuarterFilterProps) {
+export function QuarterFilter({ selected, onChange, fiscalYear }: QuarterFilterProps) {
+  const quarterOptions = QUARTER_MONTHS.map(([start, end], i) => ({
+    id: `Q${i + 1}`,
+    label: `ไตรมาสที่ ${i + 1} (${start} ${String(i === 0 ? fiscalYear - 1 : fiscalYear).slice(-2)} - ${end} ${String(i === 0 ? fiscalYear - 1 : fiscalYear).slice(-2)})`,
+  }));
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +49,7 @@ export function QuarterFilter({ selected, onChange }: QuarterFilterProps) {
   }, []);
 
   const selectedLabel =
-    QUARTER_OPTIONS.find((q) => q.id === selected)?.label ?? null;
+    quarterOptions.find((q) => q.id === selected)?.label ?? null;
 
   return (
     <div ref={containerRef} className="relative">
@@ -106,7 +111,7 @@ export function QuarterFilter({ selected, onChange }: QuarterFilterProps) {
               <span>ทั้งหมด (ทุกไตรมาส)</span>
             </button>
 
-            {QUARTER_OPTIONS.map((q) => {
+            {quarterOptions.map((q) => {
               const isSelected = selected === q.id;
               return (
                 <button

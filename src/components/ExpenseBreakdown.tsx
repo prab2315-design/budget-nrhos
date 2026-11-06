@@ -11,6 +11,7 @@ export interface ExpenseBreakdownRow {
 interface ExpenseBreakdownProps {
   rows: ExpenseBreakdownRow[];
   label?: string;
+  fiscalYear: number;
 }
 
 interface ExpenseSubgroup {
@@ -94,7 +95,7 @@ function Row({ r, indent = false }: { r: ExpenseBreakdownRow; indent?: boolean }
   );
 }
 
-export function ExpenseBreakdown({ rows, label }: ExpenseBreakdownProps) {
+export function ExpenseBreakdown({ rows, label, fiscalYear }: ExpenseBreakdownProps) {
   const sections = buildSections(rows);
 
   const totalPlan = rows.reduce((sum, r) => sum + r.แผน, 0);
@@ -142,10 +143,10 @@ export function ExpenseBreakdown({ rows, label }: ExpenseBreakdownProps) {
             </tr>
             <tr className="border-b border-black/10 bg-black/5">
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
-                แผนปีงบประมาณ พ.ศ.2569
+                แผนปีงบประมาณ พ.ศ.{fiscalYear}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
-                ผลปีงบประมาณ พ.ศ.2569
+                ผลปีงบประมาณ พ.ศ.{fiscalYear}
               </th>
               <th className="px-3 py-2 text-right text-xs font-semibold text-muted-foreground">
                 ส่วนต่าง
