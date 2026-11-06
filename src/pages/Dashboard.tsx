@@ -6,6 +6,7 @@ import {
   Clock,
   FileText,
   CalendarDays,
+  Printer,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable, { type CellHookData } from "jspdf-autotable";
@@ -30,6 +31,8 @@ import { PlanActualComparison } from "@/components/PlanActualComparison";
 import { RevenueBreakdown, type RevenueBreakdownRow } from "@/components/RevenueBreakdown";
 import { ExpenseBreakdown, type ExpenseBreakdownRow } from "@/components/ExpenseBreakdown";
 import { MophEmblem } from "@/components/MophEmblem";
+import { downloadMonthlyReport, fiscalMonths, hasMonthlyActuals } from "@/lib/monthlyReport";
+import { toast } from "sonner";
 
 // Logo URL for PDF export header
 const LOGO_URL =
@@ -96,6 +99,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [reportMonth, setReportMonth] = useState(9);
+  const [printingReport, setPrintingReport] = useState(false);
 
   // Filter state – each is multi-select
   const [filters, setFilters] = useState<Record<string, string[]>>({
@@ -139,6 +144,20 @@ export default function Dashboard() {
     setTablePage(0);
     setTableSearch("");
     setLoading(true);
+    setReportMonth(9);
+  };
+
+  const printMonthlyReport = async () => {
+    if (!data || printingReport) return;
+    setPrintingReport(true);
+    try {
+      await downloadMonthlyReport(data, fiscalYear, reportMonth);
+      toast.success("สร้างรายงานประจำเดือนเรียบร้อยแล้ว", { description: "เปิดไฟล์ PDF ที่ดาวน์โหลดเพื่อพิมพ์บนกระดาษแนวนอน" });
+    } catch (error) {
+      toast.error("ไม่สามารถสร้างรายงานได้", { description: error instanceof Error ? error.message : "กรุณาลองใหม่" });
+    } finally {
+      setPrintingReport(false);
+    }
   };
 
   useEffect(() => {
@@ -1077,6 +1096,27 @@ export default function Dashboard() {
           <select value={fiscalYear} onChange={(e) => changeFiscalYear(Number(e.target.value))} className="glass-input min-h-11 min-w-48 rounded-xl px-4 text-base font-semibold" aria-label="ปีงบประมาณ">
             {AVAILABLE_FISCAL_YEARS.map((year) => <option key={year} value={year}>พ.ศ. {year}</option>)}
           </select>
+        </section>
+
+        {/* Monthly report uses the unfiltered fiscal-year data, independently of Dashboard filters. */}
+        <section className="glass-card flex flex-col gap-4 border-l-4 border-l-blue-500 p-5 lg:flex-row lg:items-center lg:justify-between" aria-label="พิมพ์รายงานประจำเดือน">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-blue-500/15 text-blue-700"><Printer className="size-5" /></span>
+            <div>
+              <h2 className="font-bold text-foreground">พิมพ์รายงานประจำเดือน</h2>
+              <p className="text-xs text-muted-foreground">รายงานเปรียบเทียบแผน/ผลรายรับ–รายจ่ายเงินบำรุง ตามแบบรายงานตัวอย่าง · ปีงบประมาณ {fiscalYear}</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label htmlFor="report-month" className="text-sm font-medium">เลือกเดือน</label>
+            <select id="report-month" value={reportMonth} onChange={(e) => setReportMonth(Number(e.target.value))} className="glass-input min-h-11 min-w-48 rounded-xl px-4 text-sm font-semibold">
+              {fiscalMonths(fiscalYear).map(({ month, label }) => <option key={`${fiscalYear}-${month}`} value={month}>{label}</option>)}
+            </select>
+            <button type="button" onClick={printMonthlyReport} disabled={!data || printingReport || !hasMonthlyActuals(data, fiscalYear, reportMonth)} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+              <Printer className={cn("size-4", printingReport && "animate-pulse")} />{printingReport ? "กำลังสร้างรายงาน..." : "พิมพ์ / ดาวน์โหลด PDF"}
+            </button>
+          </div>
+          {data && !hasMonthlyActuals(data, fiscalYear, reportMonth) && <p className="text-xs text-amber-700">เดือนที่เลือกยังไม่มียอดจริงใน Google Sheets จึงยังพิมพ์รายงานไม่ได้</p>}
         </section>
 
         {loadError && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">{loadError} <button type="button" onClick={fetchData} className="ml-2 font-bold underline">ลองอีกครั้ง</button></div>}
